@@ -3,12 +3,13 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import API from "../services/api";
 import { useLanguage } from "../context/LanguageContext";
+import mockProducts from "../data/mockProducts";
 import "./Products.css";
 
 function Products() {
   const { t, getCategory, translateProd, toMarathiNumbers } = useLanguage();
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [products, setProducts] = useState(mockProducts);
+  const [loading, setLoading] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [cartMsg, setCartMsg] = useState({ show: false, msg: "", type: "success" });
@@ -39,14 +40,13 @@ function Products() {
   }, []);
 
   const fetchProducts = async () => {
-    setLoading(true);
     try {
       const res = await API.get("/products");
-      setProducts(res.data);
+      if (res.data && Array.isArray(res.data) && res.data.length > 0) {
+        setProducts(res.data);
+      }
     } catch (err) {
-      console.error("Error fetching products:", err);
-    } finally {
-      setLoading(false);
+      console.warn("Backend API unavailable, using initial product catalog.");
     }
   };
 

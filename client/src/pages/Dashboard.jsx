@@ -4,6 +4,7 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import API from "../services/api";
 import { useLanguage } from "../context/LanguageContext";
+import mockProducts from "../data/mockProducts";
 import "./Dashboard.css";
 
 const categories = [
@@ -82,7 +83,9 @@ const faqs = [
 function Dashboard() {
   const navigate = useNavigate();
   const { t, getCategory, translateProd, toMarathiNumbers } = useLanguage();
-  const [featuredProducts, setFeaturedProducts] = useState([]);
+  const [featuredProducts, setFeaturedProducts] = useState(() => {
+    return [...mockProducts].sort((a, b) => (b.rating || 0) - (a.rating || 0)).slice(0, 4);
+  });
   const [openFaq, setOpenFaq] = useState(null);
   const [newsletterEmail, setNewsletterEmail] = useState("");
   const [subscribedToast, setSubscribedToast] = useState(false);
@@ -95,12 +98,12 @@ function Dashboard() {
   const fetchFeaturedProducts = async () => {
     try {
       const res = await API.get("/products");
-      if (res.data && res.data.length > 0) {
+      if (res.data && Array.isArray(res.data) && res.data.length > 0) {
         const sorted = [...res.data].sort((a, b) => (b.rating || 0) - (a.rating || 0));
         setFeaturedProducts(sorted.slice(0, 4));
       }
     } catch (err) {
-      console.error("Error loading featured products:", err);
+      console.warn("Backend API unavailable, using initial featured products.");
     }
   };
 

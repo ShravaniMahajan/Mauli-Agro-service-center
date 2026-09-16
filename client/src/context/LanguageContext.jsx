@@ -259,7 +259,7 @@ export const translations = {
     usage: "📋 Usage:",
 
     // Products Page
-    productsTitle: "Noble Crop Science Products",
+    productsTitle: "Mauli Agro Agriculture Products",
     productsSubtitle: "Browse and buy high-quality seeds, fertilizers, and pesticides.",
     searchProductsPlaceholder: "Search products by name or description...",
     loadingProducts: "Loading premium products...",
@@ -488,7 +488,7 @@ export const translations = {
     usage: "📋 वापर पद्धत:",
 
     // Products Page
-    productsTitle: "नोबल क्रॉप सायन्स उत्पादने",
+    productsTitle: "माऊली ॲग्रो कृषी उत्पादने",
     productsSubtitle: "उच्च दर्जाची बियाणे, खते आणि कीटकनाशके शोधा आणि खरेदी करा.",
     searchProductsPlaceholder: "नाव किंवा वर्णनाद्वारे उत्पादने शोधा...",
     loadingProducts: "उत्कृष्ट उत्पादने लोड होत आहेत...",
