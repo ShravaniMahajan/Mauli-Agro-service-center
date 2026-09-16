@@ -1,0 +1,292 @@
+/* ====== AGRO NAVBAR ====== */
+.agro-navbar {
+  background: #1a7a3a;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.agro-nav-inner {
+  max-width: 1300px;
+  margin: 0 auto;
+  padding: 0 20px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+/* Logo */
+.agro-logo {
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.agro-logo-circle {
+  width: 44px;
+  height: 44px;
+  background: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 2px solid rgba(255,255,255,0.3);
+}
+
+.agro-logo-circle img {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+}
+
+/* Nav Links */
+.agro-nav-links {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.agro-nav-links > li {
+  padding: 8px 14px;
+  color: white;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s;
+  letter-spacing: 0.3px;
+  font-family: 'Inter', sans-serif;
+}
+
+.agro-nav-links > li:hover {
+  background: rgba(255,255,255,0.12);
+}
+
+.agro-nav-links > li.active {
+  background: rgba(255,255,255,0.15);
+  font-weight: 600;
+}
+
+/* Dropdown */
+.agro-dropdown {
+  position: relative;
+}
+
+.agro-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: white;
+  border-radius: 0 0 6px 6px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+  list-style: none;
+  padding: 6px 0;
+  margin: 0;
+  min-width: 180px;
+  z-index: 999;
+  animation: dropFade 0.2s ease;
+}
+
+@keyframes dropFade {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.agro-dropdown-menu li {
+  padding: 10px 20px;
+  color: #333;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.15s;
+  font-weight: 400;
+}
+
+.agro-dropdown-menu li:hover {
+  background: #f0fdf4;
+  color: #1a7a3a;
+}
+
+/* Right side */
+.agro-nav-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.agro-search-box {
+  display: flex;
+  align-items: center;
+}
+
+.agro-search-box input {
+  padding: 6px 14px;
+  border: 1px solid rgba(255,255,255,0.4);
+  border-radius: 4px;
+  background: white;
+  font-size: 0.85rem;
+  width: 160px;
+  outline: none;
+  font-family: 'Inter', sans-serif;
+  color: #333;
+}
+
+.agro-search-box input::placeholder {
+  color: #999;
+}
+
+.agro-search-box input:focus {
+  border-color: white;
+  box-shadow: 0 0 0 2px rgba(255,255,255,0.3);
+}
+
+/* Language Toggle Button */
+.agro-lang-toggle-btn {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.25s ease;
+  font-family: 'Inter', system-ui, sans-serif;
+  letter-spacing: 0.3px;
+}
+
+.agro-lang-toggle-btn:hover {
+  background: #ffd700;
+  color: #1a5c38;
+  border-color: #ffd700;
+  transform: scale(1.05);
+}
+
+.agro-lang-toggle-btn .lang-text {
+  font-size: 0.82rem;
+}
+
+/* Auth buttons */
+.agro-auth-area {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.agro-signup-btn,
+.agro-login-btn {
+  padding: 6px 16px;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: all 0.2s;
+}
+
+.agro-signup-btn {
+  background: transparent;
+  color: #ffd700;
+  border: 1px solid #ffd700;
+}
+
+.agro-signup-btn:hover {
+  background: #ffd700;
+  color: #1a5c38;
+}
+
+.agro-login-btn {
+  background: #ffd700;
+  color: #1a5c38;
+}
+
+.agro-login-btn:hover {
+  background: #ffe44d;
+}
+
+.agro-cart-btn {
+  padding: 6px 14px;
+  background: rgba(255,255,255,0.15);
+  color: white;
+  border: 1px solid rgba(255,255,255,0.3);
+  border-radius: 4px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: background 0.2s;
+}
+
+.agro-cart-btn:hover {
+  background: rgba(255,255,255,0.25);
+}
+
+.agro-logout-btn {
+  padding: 6px 14px;
+  background: #e53935;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: background 0.2s;
+}
+
+.agro-logout-btn:hover {
+  background: #c62828;
+}
+
+.agro-dashboard-btn {
+  padding: 6px 14px;
+  background: #ffd700;
+  color: #1a5c38;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: all 0.2s ease;
+}
+
+.agro-dashboard-btn:hover {
+  background: #ffe44d;
+  transform: translateY(-1px);
+}
+
+.agro-dashboard-btn:active {
+  transform: translateY(0);
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .agro-nav-inner {
+    flex-wrap: wrap;
+    height: auto;
+    padding: 10px 16px;
+  }
+
+  .agro-nav-links {
+    flex-wrap: wrap;
+    gap: 2px;
+  }
+
+  .agro-nav-links > li {
+    font-size: 0.78rem;
+    padding: 6px 10px;
+  }
+
+  .agro-search-box input {
+    width: 120px;
+  }
+}

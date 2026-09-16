@@ -1,0 +1,2 @@
+/* Remove old Register.css since we now share Login.css styles */
+/* Register uses auth-page class from Login.css */

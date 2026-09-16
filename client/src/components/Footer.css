@@ -1,0 +1,110 @@
+/* ====== AGRO FOOTER ====== */
+.agro-footer {
+  background: #1a7a3a;
+  color: white;
+  margin-top: auto;
+}
+
+.agro-footer-inner {
+  max-width: 1300px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  padding: 30px 24px;
+  gap: 32px;
+}
+
+.agro-footer-col h4 {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid rgba(255,255,255,0.2);
+  padding-bottom: 8px;
+}
+
+.agro-footer-col p {
+  font-size: 0.88rem;
+  color: #d1fae5;
+  margin-bottom: 6px;
+  line-height: 1.6;
+}
+
+.agro-footer-center {
+  text-align: center;
+}
+
+.agro-footer-center ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.agro-footer-center ul li {
+  color: #d1fae5;
+  font-size: 0.9rem;
+  padding: 4px 0;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.agro-footer-center ul li:hover {
+  color: white;
+  text-decoration: underline;
+}
+
+.agro-footer-right {
+  text-align: right;
+}
+
+.agro-social-icons {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.social-fb,
+.social-ig {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s;
+}
+
+.social-fb {
+  background: #1877f2;
+}
+
+.social-ig {
+  background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+}
+
+.social-fb:hover,
+.social-ig:hover {
+  transform: scale(1.1);
+}
+
+.social-fb svg,
+.social-ig svg {
+  width: 18px;
+  height: 18px;
+}
+
+@media (max-width: 768px) {
+  .agro-footer-inner {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+
+  .agro-footer-right {
+    text-align: center;
+  }
+
+  .agro-social-icons {
+    justify-content: center;
+  }
+}

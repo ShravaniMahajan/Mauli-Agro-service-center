@@ -1,0 +1,321 @@
+/* ==================== BRAND PAGE ==================== */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600&display=swap');
+
+.brand-main {
+  flex: 1;
+  padding-top: 72px;
+  background: #f7f8fa;
+}
+
+/* ---- Hero ---- */
+.brand-hero {
+  background: linear-gradient(135deg, #0e3d26 0%, #1a5c38 50%, #2e7d52 100%);
+  color: white;
+  padding: 72px 48px 56px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 40px;
+  position: relative;
+  overflow: hidden;
+}
+
+.brand-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: url("https://images.unsplash.com/photo-1464226184884-fa280b87c399?w=1400&q=60") center/cover no-repeat;
+  opacity: 0.08;
+  pointer-events: none;
+}
+
+.brand-hero-content {
+  position: relative;
+  z-index: 1;
+}
+
+.brand-hero-badge {
+  display: inline-block;
+  background: rgba(124,181,24,0.2);
+  border: 1px solid #7cb518;
+  color: #a8d838;
+  padding: 6px 18px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+}
+
+.brand-hero h1 {
+  font-family: 'Poppins', sans-serif;
+  font-size: clamp(2rem, 5vw, 3.2rem);
+  font-weight: 800;
+  line-height: 1.15;
+  margin-bottom: 16px;
+}
+
+.brand-hero h1 span {
+  color: #7cb518;
+}
+
+.brand-hero p {
+  font-size: 1.1rem;
+  color: rgba(255,255,255,0.8);
+  max-width: 620px;
+  margin: 0 auto;
+}
+
+.brand-hero-stats {
+  display: flex;
+  gap: 24px;
+  position: relative;
+  z-index: 1;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.bhs-card {
+  background: rgba(255,255,255,0.12);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 14px;
+  padding: 20px 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 140px;
+}
+
+.bhs-num {
+  font-family: 'Poppins', sans-serif;
+  font-size: 2rem;
+  font-weight: 800;
+  color: #7cb518;
+}
+
+.bhs-label {
+  font-size: 0.85rem;
+  color: rgba(255,255,255,0.75);
+  font-weight: 500;
+}
+
+/* ---- Filter Section ---- */
+.brand-filter-section {
+  padding: 40px 48px 0;
+  max-width: 1280px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.brand-search-wrap {
+  position: relative;
+  margin-bottom: 20px;
+  max-width: 520px;
+}
+
+.brand-search-icon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1rem;
+}
+
+.brand-search-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 16px 12px 44px;
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.95rem;
+  transition: border-color 0.2s;
+  outline: none;
+  background: white;
+}
+
+.brand-search-input:focus {
+  border-color: #1a5c38;
+}
+
+.brand-category-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.brand-tab {
+  padding: 8px 18px;
+  border-radius: 999px;
+  border: 2px solid #e5e7eb;
+  background: white;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: #4b5563;
+}
+
+.brand-tab:hover {
+  border-color: #1a5c38;
+  color: #1a5c38;
+}
+
+.brand-tab.active {
+  background: #1a5c38;
+  border-color: #1a5c38;
+  color: white;
+}
+
+/* ---- Brand Logo Grid (like the image) ---- */
+.brand-grid-section {
+  padding: 32px 48px 64px;
+  max-width: 1280px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.brand-count {
+  font-size: 0.9rem;
+  color: #6b7280;
+  margin-bottom: 24px;
+  font-weight: 500;
+}
+
+/* 4-column grid matching the image */
+.brand-logo-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+/* Each card: white box with border, logo centered, name below */
+.brand-logo-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 28px 20px 20px;
+  cursor: pointer;
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s;
+  gap: 16px;
+  min-height: 180px;
+  justify-content: center;
+}
+
+.brand-logo-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 32px rgba(26,92,56,0.13);
+  border-color: #1a5c38;
+}
+
+/* Logo image area – fixed height so all cards align */
+.brand-logo-box {
+  width: 140px;
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.brand-logo-img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  transition: transform 0.2s;
+}
+
+.brand-logo-card:hover .brand-logo-img {
+  transform: scale(1.06);
+}
+
+/* Fallback colored box when image fails */
+.brand-logo-fallback {
+  width: 100px;
+  height: 70px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Poppins', sans-serif;
+  font-size: 1.4rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+/* Brand name label below logo */
+.brand-logo-name {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #374151;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  text-align: center;
+  margin: 0;
+}
+
+/* ---- Empty State ---- */
+.brand-empty {
+  text-align: center;
+  padding: 60px 24px;
+  color: #6b7280;
+}
+
+.brand-empty p {
+  font-size: 1.1rem;
+  margin-bottom: 20px;
+}
+
+/* ---- CTA ---- */
+.brand-cta {
+  background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+  text-align: center;
+  padding: 64px 48px;
+  border-top: 1px solid #bbf7d0;
+}
+
+.brand-cta h2 {
+  font-family: 'Poppins', sans-serif;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1a5c38;
+  margin-bottom: 12px;
+}
+
+.brand-cta p {
+  color: #4b5563;
+  font-size: 1.05rem;
+  margin-bottom: 28px;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 1024px) {
+  .brand-logo-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .brand-hero { padding: 48px 20px 40px; }
+  .brand-filter-section,
+  .brand-grid-section { padding-left: 20px; padding-right: 20px; }
+  .brand-logo-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 420px) {
+  .brand-logo-grid { grid-template-columns: 1fr; }
+}
