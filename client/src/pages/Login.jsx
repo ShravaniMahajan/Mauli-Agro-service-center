@@ -59,7 +59,7 @@ function Login() {
 
       // Default demo accounts (Admin & Farmer)
       if ((inputVal === "admin" || inputVal === "admin@smartkrushi.com") &&
-          (password === "admin" || password === "admin123")) {
+          (password === "admin" || password === "admin123" || password === "Admin@123")) {
         const userData = { _id: "demo-admin", username: "Admin", email: "admin@smartkrushi.com", role: "admin" };
         localStorage.setItem("token", "demo-token-" + Date.now());
         localStorage.setItem("user", JSON.stringify(userData));
