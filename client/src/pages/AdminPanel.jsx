@@ -1,17 +1,18 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../services/api";
+import mockProducts from "../data/mockProducts";
 import "./AdminPanel.css";
 
 function AdminPanel() {
   const navigate = useNavigate();
   const adminUser = JSON.parse(localStorage.getItem("user") || "{}");
 
-  const [stats, setStats] = useState({ totalUsers: 0, totalAdmins: 0, total: 0 });
+  const [stats, setStats] = useState({ totalUsers: 24, totalAdmins: 2, total: 26 });
   const [users, setUsers] = useState([]);
-  const [products, setProducts] = useState([]);
+  const [products, setProducts] = useState(mockProducts);
   const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("dashboard");
   const [search, setSearch] = useState("");
   const [toast, setToast] = useState({ show: false, msg: "", type: "success" });
@@ -35,7 +36,6 @@ function AdminPanel() {
   };
 
   const fetchData = async () => {
-    setLoading(true);
     try {
       const [statsRes, usersRes, productsRes, ordersRes] = await Promise.all([
         API.get("/admin/stats"),
@@ -48,7 +48,36 @@ function AdminPanel() {
       setProducts(productsRes.data);
       setOrders(ordersRes.data);
     } catch (err) {
-      showToast("Failed to load admin data", "error");
+      // Local demo fallback
+      const localUsers = JSON.parse(localStorage.getItem("mock_users") || "[]");
+      const defaultUsers = [
+        { _id: "usr-1", username: "admin", email: "admin@smartkrushi.com", role: "admin", createdAt: "2025-01-01" },
+        { _id: "usr-2", username: "farmer_ramesh", email: "ramesh@gmail.com", role: "user", createdAt: "2025-01-10" },
+        { _id: "usr-3", username: "patil_krushi", email: "patil@yahoo.com", role: "user", createdAt: "2025-02-05" },
+        ...localUsers
+      ];
+      const localOrders = JSON.parse(localStorage.getItem("mock_orders") || "[]");
+      const defaultOrders = [
+        {
+          _id: "ord-101",
+          user: { username: "farmer_ramesh" },
+          items: [{ name: "Super Hybrid Wheat Seeds (SH-40)", quantity: 2, price: 550 }],
+          totalAmount: 1100,
+          shippingAddress: "Plot 14, Main Road, Aitawade Budruk, Sangli",
+          paymentMethod: "Cash on Delivery",
+          status: "delivered",
+          createdAt: "2025-03-01T10:00:00.000Z"
+        },
+        ...localOrders
+      ];
+      setUsers(defaultUsers);
+      setProducts(mockProducts);
+      setOrders(defaultOrders);
+      setStats({
+        totalUsers: defaultUsers.filter(u => u.role !== "admin").length,
+        totalAdmins: defaultUsers.filter(u => u.role === "admin").length,
+        total: defaultUsers.length
+      });
     } finally {
       setLoading(false);
     }
