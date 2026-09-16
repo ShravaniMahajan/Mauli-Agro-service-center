@@ -126,24 +126,6 @@ function Register() {
                 </div>
               </div>
 
-              <div className="auth-field">
-                <label htmlFor="reg-role">{t("roleLabel")}</label>
-                <div className="auth-input-wrapper">
-                  <span className="auth-input-icon">🛡️</span>
-                  <select
-                    id="reg-role"
-                    name="role"
-                    value={formData.role}
-                    onChange={handleChange}
-                    required
-                    style={{ paddingRight: "40px" }}
-                  >
-                    <option value="user">{t("roleUser")}</option>
-                    <option value="admin">{t("roleAdmin")}</option>
-                  </select>
-                </div>
-              </div>
-
               {message.text && (
                 <div className={`auth-alert ${message.type}`} role="alert">
                   <span>{message.type === "success" ? "✅" : "❌"}</span>
