@@ -48,19 +48,34 @@ function AdminPanel() {
       setProducts(productsRes.data);
       setOrders(ordersRes.data);
     } catch (err) {
-      // Local demo fallback
+      // Local demo fallback with dynamic local registered users
       const localUsers = JSON.parse(localStorage.getItem("mock_users") || "[]");
-      const defaultUsers = [
-        { _id: "usr-1", username: "admin", email: "admin@smartkrushi.com", role: "admin", createdAt: "2025-01-01" },
-        { _id: "usr-2", username: "farmer_ramesh", email: "ramesh@gmail.com", role: "user", createdAt: "2025-01-10" },
-        { _id: "usr-3", username: "patil_krushi", email: "patil@yahoo.com", role: "user", createdAt: "2025-02-05" },
-        ...localUsers
+      const baseUsers = [
+        { _id: "usr-admin", username: "admin", email: "admin@smartkrushi.com", role: "admin", createdAt: "2025-01-01" },
+        { _id: "usr-shravani", username: "Shravani Mahajan", email: "shravanimahajan0744@gmail.com", role: "user", createdAt: "2025-02-14" },
+        { _id: "usr-ramesh", username: "farmer_ramesh", email: "ramesh@gmail.com", role: "user", createdAt: "2025-01-10" },
+        { _id: "usr-patil", username: "patil_krushi", email: "patil@yahoo.com", role: "user", createdAt: "2025-02-05" }
       ];
+
+      // Merge base users with any newly registered users avoiding duplicates by email/username
+      const combinedUsers = [...baseUsers];
+      localUsers.forEach((lu) => {
+        if (!combinedUsers.some((u) => u.email?.toLowerCase() === lu.email?.toLowerCase() || u.username?.toLowerCase() === lu.username?.toLowerCase())) {
+          combinedUsers.push({
+            _id: lu.id || "usr-" + Date.now(),
+            username: lu.username,
+            email: lu.email,
+            role: lu.role || "user",
+            createdAt: new Date().toISOString().split("T")[0]
+          });
+        }
+      });
+
       const localOrders = JSON.parse(localStorage.getItem("mock_orders") || "[]");
       const defaultOrders = [
         {
           _id: "ord-101",
-          user: { username: "farmer_ramesh" },
+          user: { username: "Shravani Mahajan" },
           items: [{ name: "Super Hybrid Wheat Seeds (SH-40)", quantity: 2, price: 550 }],
           totalAmount: 1100,
           shippingAddress: "Plot 14, Main Road, Aitawade Budruk, Sangli",
@@ -70,13 +85,17 @@ function AdminPanel() {
         },
         ...localOrders
       ];
-      setUsers(defaultUsers);
-      setProducts(mockProducts);
+
+      const localCustomProducts = JSON.parse(localStorage.getItem("mock_products") || "[]");
+      const combinedProducts = localCustomProducts.length > 0 ? localCustomProducts : mockProducts;
+
+      setUsers(combinedUsers);
+      setProducts(combinedProducts);
       setOrders(defaultOrders);
       setStats({
-        totalUsers: defaultUsers.filter(u => u.role !== "admin").length,
-        totalAdmins: defaultUsers.filter(u => u.role === "admin").length,
-        total: defaultUsers.length
+        totalUsers: combinedUsers.filter(u => u.role !== "admin").length,
+        totalAdmins: combinedUsers.filter(u => u.role === "admin").length,
+        total: combinedUsers.length
       });
     } finally {
       setLoading(false);
@@ -92,68 +111,82 @@ function AdminPanel() {
     if (!window.confirm("Delete this user permanently?")) return;
     try {
       await API.delete(`/admin/users/${id}`);
-      showToast("User deleted successfully");
-      fetchData();
     } catch {
-      showToast("Failed to delete user", "error");
+      // offline fallback
+      const updated = users.filter((u) => u._id !== id);
+      setUsers(updated);
+      const localUsers = JSON.parse(localStorage.getItem("mock_users") || "[]").filter((u) => u.id !== id && u._id !== id);
+      localStorage.setItem("mock_users", JSON.stringify(localUsers));
     }
+    showToast("User deleted successfully");
   };
 
   const handleRoleChange = async (id, newRole) => {
     try {
       await API.patch(`/admin/users/${id}/role`, { role: newRole });
-      showToast(`Role updated to ${newRole}`);
-      fetchData();
     } catch {
-      showToast("Failed to update role", "error");
+      // offline fallback
+      const updated = users.map((u) => (u._id === id ? { ...u, role: newRole } : u));
+      setUsers(updated);
     }
+    showToast(`Role updated to ${newRole}`);
   };
 
   // --- Product Handlers ---
   const handleProductSubmit = async (e) => {
     e.preventDefault();
-    try {
-      const payload = {
-        ...productForm,
-        price: Number(productForm.price),
-        mrp: Number(productForm.mrp),
-        stock: Number(productForm.stock)
-      };
+    const payload = {
+      _id: editingProduct ? editingProduct._id : "prod-custom-" + Date.now(),
+      ...productForm,
+      price: Number(productForm.price),
+      mrp: Number(productForm.mrp),
+      stock: Number(productForm.stock),
+      rating: editingProduct?.rating || 5.0,
+      numReviews: editingProduct?.numReviews || 0
+    };
 
+    try {
       if (editingProduct) {
         await API.put(`/products/${editingProduct._id}`, payload);
-        showToast("Product updated successfully");
       } else {
         await API.post("/products", payload);
-        showToast("Product added successfully");
       }
-
-      setProductForm({
-        name: "",
-        category: "Seeds",
-        description: "",
-        price: "",
-        mrp: "",
-        stock: "",
-        image: ""
-      });
-      setEditingProduct(null);
-      setShowProductModal(false);
-      fetchData();
     } catch (err) {
-      showToast(err.response?.data?.message || "Failed to save product", "error");
+      // offline fallback
+      let updatedProducts = [...products];
+      if (editingProduct) {
+        updatedProducts = updatedProducts.map((p) => (p._id === editingProduct._id ? payload : p));
+      } else {
+        updatedProducts.unshift(payload);
+      }
+      setProducts(updatedProducts);
+      localStorage.setItem("mock_products", JSON.stringify(updatedProducts));
     }
+
+    showToast(editingProduct ? "Product updated successfully" : "Product added successfully");
+    setProductForm({
+      name: "",
+      category: "Seeds",
+      description: "",
+      price: "",
+      mrp: "",
+      stock: "",
+      image: ""
+    });
+    setEditingProduct(null);
+    setShowProductModal(false);
   };
 
   const handleProductDelete = async (id) => {
     if (!window.confirm("Delete this product permanently?")) return;
     try {
       await API.delete(`/products/${id}`);
-      showToast("Product deleted successfully");
-      fetchData();
     } catch {
-      showToast("Failed to delete product", "error");
+      const updated = products.filter((p) => p._id !== id);
+      setProducts(updated);
+      localStorage.setItem("mock_products", JSON.stringify(updated));
     }
+    showToast("Product deleted successfully");
   };
 
   const handleEditProductClick = (product) => {
