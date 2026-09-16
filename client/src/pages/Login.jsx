@@ -19,8 +19,10 @@ function Login() {
     e.preventDefault();
     setLoading(true);
     setMessage({ text: "", type: "" });
+    const inputVal = username.toLowerCase().trim();
+
     try {
-      const res = await API.post("/auth/login", { username, password });
+      const res = await API.post("/auth/login", { username: username.trim(), password });
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("user", JSON.stringify(res.data.user));
       setMessage({ text: "Login successful! Redirecting...", type: "success" });
@@ -32,10 +34,13 @@ function Login() {
         }
       }, 800);
     } catch (err) {
-      // Offline fallback: Check registered local users or default demo credentials
+      // Offline fallback: Check registered local users by Username OR Email
       const localUsers = JSON.parse(localStorage.getItem("mock_users") || "[]");
       const matchedLocal = localUsers.find(
-        (u) => u.username.toLowerCase() === username.toLowerCase() && u.password === password
+        (u) =>
+          (u.username?.toLowerCase().trim() === inputVal ||
+           u.email?.toLowerCase().trim() === inputVal) &&
+          u.password === password
       );
 
       if (matchedLocal) {
@@ -53,27 +58,38 @@ function Login() {
       }
 
       // Default demo accounts (Admin & Farmer)
-      const uLower = username.toLowerCase().trim();
-      if ((uLower === "admin" && (password === "admin" || password === "admin123")) ||
-          (uLower === "farmer" && (password === "farmer" || password === "farmer123"))) {
-        const role = uLower === "admin" ? "admin" : "user";
-        const userData = {
-          _id: "demo-" + role,
-          username: username.trim(),
-          email: `${uLower}@smartkrushi.com`,
-          role
-        };
+      if ((inputVal === "admin" || inputVal === "admin@smartkrushi.com") &&
+          (password === "admin" || password === "admin123")) {
+        const userData = { _id: "demo-admin", username: "Admin", email: "admin@smartkrushi.com", role: "admin" };
         localStorage.setItem("token", "demo-token-" + Date.now());
         localStorage.setItem("user", JSON.stringify(userData));
         setMessage({ text: "Login successful! Redirecting...", type: "success" });
-        setTimeout(() => navigate(role === "admin" ? "/admin-panel" : "/user-panel"), 800);
+        setTimeout(() => navigate("/admin-panel"), 800);
         return;
       }
 
-      setMessage({
-        text: err.response?.data?.message || "Invalid credentials. (Demo: admin / admin123 or farmer / farmer123)",
-        type: "error"
-      });
+      if ((inputVal === "farmer" || inputVal === "farmer@smartkrushi.com") &&
+          (password === "farmer" || password === "farmer123")) {
+        const userData = { _id: "demo-farmer", username: "Farmer", email: "farmer@smartkrushi.com", role: "user" };
+        localStorage.setItem("token", "demo-token-" + Date.now());
+        localStorage.setItem("user", JSON.stringify(userData));
+        setMessage({ text: "Login successful! Redirecting...", type: "success" });
+        setTimeout(() => navigate("/user-panel"), 800);
+        return;
+      }
+
+      // If user exists by username or email but wrong password
+      const existsUser = localUsers.find(
+        (u) => u.username?.toLowerCase().trim() === inputVal || u.email?.toLowerCase().trim() === inputVal
+      );
+      if (existsUser) {
+        setMessage({ text: "Incorrect password. Please try again.", type: "error" });
+      } else {
+        setMessage({
+          text: err.response?.data?.message || "Invalid credentials. Please check your username/email or sign up.",
+          type: "error"
+        });
+      }
     } finally {
       setLoading(false);
     }

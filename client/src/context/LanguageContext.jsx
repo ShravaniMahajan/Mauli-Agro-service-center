@@ -376,9 +376,9 @@ export const translations = {
     // Login & Register Pages
     loginTitle: "Welcome Back",
     loginSubtitle: "Sign in to your Smart Krushi account",
-    usernameLabel: "Username",
+    usernameLabel: "Username or Email",
     passwordLabel: "Password",
-    usernamePlaceholder: "Enter your username",
+    usernamePlaceholder: "Enter your username or email",
     passwordPlaceholder: "Enter your password",
     signingIn: "Signing in...",
     signInBtn: "Sign In",
@@ -605,9 +605,9 @@ export const translations = {
     // Login & Register Pages
     loginTitle: "तुमचे स्वागत आहे",
     loginSubtitle: "तुमच्या स्मार्ट कृषी खात्यामध्ये साइन इन करा",
-    usernameLabel: "वापरकर्तानाव",
+    usernameLabel: "वापरकर्तानाव किंवा ईमेल",
     passwordLabel: "पासवर्ड",
-    usernamePlaceholder: "तुमचे वापरकर्तानाव टाका",
+    usernamePlaceholder: "तुमचे वापरकर्तानाव किंवा ईमेल टाका",
     passwordPlaceholder: "तुमचा पासवर्ड टाका",
     signingIn: "साइन इन होत आहे...",
     signInBtn: "साइन इन करा",

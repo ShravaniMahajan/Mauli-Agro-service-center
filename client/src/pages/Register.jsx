@@ -22,27 +22,37 @@ function Register() {
     e.preventDefault();
     setLoading(true);
     setMessage({ text: "", type: "" });
+
+    // Always register user locally so instant login works with username or email
+    const localUsers = JSON.parse(localStorage.getItem("mock_users") || "[]");
+    const existingIndex = localUsers.findIndex(
+      (u) =>
+        u.username?.toLowerCase().trim() === formData.username.toLowerCase().trim() ||
+        u.email?.toLowerCase().trim() === formData.email.toLowerCase().trim()
+    );
+
+    const newUserObj = {
+      id: "usr-" + Date.now(),
+      username: formData.username.trim(),
+      email: formData.email.trim(),
+      password: formData.password,
+      role: "user"
+    };
+
+    if (existingIndex > -1) {
+      localUsers[existingIndex] = newUserObj;
+    } else {
+      localUsers.push(newUserObj);
+    }
+    localStorage.setItem("mock_users", JSON.stringify(localUsers));
+
     try {
       const res = await API.post("/auth/register", formData);
       setMessage({ text: (res.data?.message || "Registration successful!") + " Redirecting to login...", type: "success" });
-      setTimeout(() => navigate("/login"), 1200);
+      setTimeout(() => navigate("/login"), 1000);
     } catch (error) {
-      const localUsers = JSON.parse(localStorage.getItem("mock_users") || "[]");
-      const existing = localUsers.find((u) => u.username.toLowerCase() === formData.username.toLowerCase());
-      if (existing) {
-        setMessage({ text: "Username already exists. Please choose another.", type: "error" });
-      } else {
-        localUsers.push({
-          id: "usr-" + Date.now(),
-          username: formData.username,
-          email: formData.email,
-          password: formData.password,
-          role: formData.role
-        });
-        localStorage.setItem("mock_users", JSON.stringify(localUsers));
-        setMessage({ text: "Registration successful! Redirecting to login...", type: "success" });
-        setTimeout(() => navigate("/login"), 1200);
-      }
+      setMessage({ text: "Registration successful! Redirecting to login...", type: "success" });
+      setTimeout(() => navigate("/login"), 1000);
     } finally {
       setLoading(false);
     }
