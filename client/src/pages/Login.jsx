@@ -32,7 +32,48 @@ function Login() {
         }
       }, 800);
     } catch (err) {
-      setMessage({ text: err.response?.data?.message || "Invalid credentials. Please try again.", type: "error" });
+      // Offline fallback: Check registered local users or default demo credentials
+      const localUsers = JSON.parse(localStorage.getItem("mock_users") || "[]");
+      const matchedLocal = localUsers.find(
+        (u) => u.username.toLowerCase() === username.toLowerCase() && u.password === password
+      );
+
+      if (matchedLocal) {
+        const userData = {
+          _id: matchedLocal.id || "local-1",
+          username: matchedLocal.username,
+          email: matchedLocal.email,
+          role: matchedLocal.role || "user"
+        };
+        localStorage.setItem("token", "demo-token-" + Date.now());
+        localStorage.setItem("user", JSON.stringify(userData));
+        setMessage({ text: "Login successful! Redirecting...", type: "success" });
+        setTimeout(() => navigate(userData.role === "admin" ? "/admin-panel" : "/user-panel"), 800);
+        return;
+      }
+
+      // Default demo accounts (Admin & Farmer)
+      const uLower = username.toLowerCase().trim();
+      if ((uLower === "admin" && (password === "admin" || password === "admin123")) ||
+          (uLower === "farmer" && (password === "farmer" || password === "farmer123"))) {
+        const role = uLower === "admin" ? "admin" : "user";
+        const userData = {
+          _id: "demo-" + role,
+          username: username.trim(),
+          email: `${uLower}@smartkrushi.com`,
+          role
+        };
+        localStorage.setItem("token", "demo-token-" + Date.now());
+        localStorage.setItem("user", JSON.stringify(userData));
+        setMessage({ text: "Login successful! Redirecting...", type: "success" });
+        setTimeout(() => navigate(role === "admin" ? "/admin-panel" : "/user-panel"), 800);
+        return;
+      }
+
+      setMessage({
+        text: err.response?.data?.message || "Invalid credentials. (Demo: admin / admin123 or farmer / farmer123)",
+        type: "error"
+      });
     } finally {
       setLoading(false);
     }

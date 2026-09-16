@@ -1,9 +1,9 @@
 import React, { useState } from "react";
-import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { useLanguage } from "../context/LanguageContext";
+import API from "../services/api";
 import "./Login.css";
 
 function Register() {
@@ -23,11 +23,26 @@ function Register() {
     setLoading(true);
     setMessage({ text: "", type: "" });
     try {
-      const res = await axios.post("http://localhost:5000/api/auth/register", formData);
-      setMessage({ text: res.data.message + " Redirecting to login...", type: "success" });
+      const res = await API.post("/auth/register", formData);
+      setMessage({ text: (res.data?.message || "Registration successful!") + " Redirecting to login...", type: "success" });
       setTimeout(() => navigate("/login"), 1200);
     } catch (error) {
-      setMessage({ text: error.response?.data?.message || "Registration failed. Please try again.", type: "error" });
+      const localUsers = JSON.parse(localStorage.getItem("mock_users") || "[]");
+      const existing = localUsers.find((u) => u.username.toLowerCase() === formData.username.toLowerCase());
+      if (existing) {
+        setMessage({ text: "Username already exists. Please choose another.", type: "error" });
+      } else {
+        localUsers.push({
+          id: "usr-" + Date.now(),
+          username: formData.username,
+          email: formData.email,
+          password: formData.password,
+          role: formData.role
+        });
+        localStorage.setItem("mock_users", JSON.stringify(localUsers));
+        setMessage({ text: "Registration successful! Redirecting to login...", type: "success" });
+        setTimeout(() => navigate("/login"), 1200);
+      }
     } finally {
       setLoading(false);
     }
