@@ -81,7 +81,7 @@ function AdminPanel() {
           shippingAddress: "Plot 14, Main Road, Aitawade Budruk, Sangli",
           paymentMethod: "Cash on Delivery",
           status: "Delivered",
-          createdAt: "2025-03-01T10:00:00.000Z"
+          createdAt: new Date().toISOString()
         },
         ...localOrders
       ];

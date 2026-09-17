@@ -203,18 +203,24 @@ function UserPanel() {
                               
                               <div className="user-order-body">
                                 <div className="order-items-summary">
-                                  {order.items.map((item, idx) => (
-                                    <div key={idx} className="order-item-row">
-                                      <span>{item.product?.name || "Product"} (x{item.quantity})</span>
-                                      <span>₹{item.price * item.quantity}</span>
-                                    </div>
-                                  ))}
+                                  {order.items.map((item, idx) => {
+                                    const itemName =
+                                      item.name ||
+                                      item.product?.name ||
+                                      (typeof item.product === "string" ? item.product : "Product");
+                                    return (
+                                      <div key={idx} className="order-item-row">
+                                        <span>{itemName} (x{item.quantity})</span>
+                                        <span>₹{item.price * item.quantity}</span>
+                                      </div>
+                                    );
+                                  })}
                                 </div>
 
                                 <div className="order-details-summary">
                                   <p><strong>Address:</strong> {order.shippingAddress}</p>
                                   <p><strong>Method:</strong> {order.paymentMethod}</p>
-                                  <p><strong>Date:</strong> {new Date(order.createdAt).toLocaleDateString()}</p>
+                                  <p><strong>Date:</strong> {new Date(order.createdAt || Date.now()).toLocaleDateString()}</p>
                                 </div>
                               </div>
 
