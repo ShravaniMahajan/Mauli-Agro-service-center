@@ -484,22 +484,13 @@ function AdminPanel() {
                           <td><span className={`role-badge ${u.role}`}>{u.role}</span></td>
                           <td>
                             <div className="admin-actions">
-                              <select
-                                className="role-select"
-                                value={u.role}
-                                onChange={(e) => handleRoleChange(u._id, e.target.value)}
-                                disabled={u._id === adminUser.id}
-                              >
-                                <option value="user">User</option>
-                                <option value="admin">Admin</option>
-                              </select>
                               <button
                                 className="admin-del-btn"
                                 onClick={() => handleDelete(u._id)}
-                                disabled={u._id === adminUser.id}
+                                disabled={u._id === adminUser.id || u.role === "admin"}
                                 title="Delete user"
                               >
-                                🗑️
+                                🗑️ Delete
                               </button>
                             </div>
                           </td>

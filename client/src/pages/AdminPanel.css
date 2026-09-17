@@ -250,17 +250,27 @@
 .role-select:disabled { opacity: 0.4; cursor: not-allowed; }
 
 .admin-del-btn {
-  padding: 0.35rem 0.6rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.8rem;
   border-radius: 8px;
-  border: 1px solid rgba(248,113,113,0.3);
-  background: rgba(248,113,113,0.08);
+  border: 1px solid rgba(248, 113, 113, 0.3);
+  background: rgba(248, 113, 113, 0.08);
   color: var(--admin-red);
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: 0.82rem;
+  font-weight: 600;
   transition: all 0.2s;
 }
-.admin-del-btn:hover:not(:disabled) { background: rgba(248,113,113,0.2); }
-.admin-del-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.admin-del-btn:hover:not(:disabled) {
+  background: rgba(248, 113, 113, 0.2);
+  transform: translateY(-1px);
+}
+.admin-del-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
 
 /* ---- Search ---- */
 .admin-search-wrap {
