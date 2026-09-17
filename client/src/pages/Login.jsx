@@ -30,7 +30,7 @@ function Login() {
         if (res.data.user.role === "admin") {
           navigate("/admin-panel");
         } else {
-          navigate("/user-panel");
+          navigate("/");
         }
       }, 800);
     } catch (err) {
@@ -52,7 +52,7 @@ function Login() {
         localStorage.setItem("token", "demo-token-" + Date.now());
         localStorage.setItem("user", JSON.stringify(userData));
         setMessage({ text: "Login successful! Redirecting...", type: "success" });
-        setTimeout(() => navigate(userData.role === "admin" ? "/admin-panel" : "/user-panel"), 800);
+        setTimeout(() => navigate(userData.role === "admin" ? "/admin-panel" : "/"), 800);
         return;
       }
 
@@ -74,7 +74,7 @@ function Login() {
         localStorage.setItem("token", "demo-token-" + Date.now());
         localStorage.setItem("user", JSON.stringify(userData));
         setMessage({ text: "Login successful! Redirecting...", type: "success" });
-        setTimeout(() => navigate("/user-panel"), 800);
+        setTimeout(() => navigate("/"), 800);
         return;
       }
 
@@ -89,7 +89,7 @@ function Login() {
         localStorage.setItem("token", "demo-token-" + Date.now());
         localStorage.setItem("user", JSON.stringify(userData));
         setMessage({ text: "Login successful! Redirecting...", type: "success" });
-        setTimeout(() => navigate("/user-panel"), 800);
+        setTimeout(() => navigate("/"), 800);
         return;
       }
 
