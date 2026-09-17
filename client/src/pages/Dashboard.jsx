@@ -73,6 +73,17 @@ const categories = [
   }
 ];
 
+const topBrands = [
+  { name: "Bayer CropScience", icon: "🌱", sub: "Global Leader" },
+  { name: "Syngenta", icon: "🌾", sub: "Crop Care" },
+  { name: "UPL Ltd.", icon: "🍃", sub: "Bio Nutrients" },
+  { name: "Mahyco Seeds", icon: "🌻", sub: "Certified Hybrid" },
+  { name: "Katyayani", icon: "🛡️", sub: "Bio Pesticides" },
+  { name: "IFFCO", icon: "🧪", sub: "Quality Fertilizers" },
+  { name: "Advanta Seeds", icon: "🌽", sub: "Resistant Seeds" },
+  { name: "Tata Rallis", icon: "⚡", sub: "Agri Solutions" }
+];
+
 const faqs = [
   { qKey: "faq1Q", aKey: "faq1A" },
   { qKey: "faq2Q", aKey: "faq2A" },
@@ -89,6 +100,7 @@ function Dashboard() {
   const [openFaq, setOpenFaq] = useState(null);
   const [newsletterEmail, setNewsletterEmail] = useState("");
   const [subscribedToast, setSubscribedToast] = useState(false);
+  const [toastMsg, setToastMsg] = useState({ show: false, msg: "", type: "success" });
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -105,6 +117,36 @@ function Dashboard() {
     } catch (err) {
       console.warn("Backend API unavailable, using initial featured products.");
     }
+  };
+
+  const handleAddToCart = (e, product) => {
+    e.stopPropagation();
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setToastMsg({ show: true, msg: "Please login to add products to your cart.", type: "error" });
+      setTimeout(() => setToastMsg({ show: false, msg: "", type: "success" }), 3000);
+      return;
+    }
+
+    let cart = JSON.parse(localStorage.getItem("cart") || "[]");
+    const existingIndex = cart.findIndex((item) => item.product === product._id);
+    if (existingIndex > -1) {
+      cart[existingIndex].quantity += 1;
+    } else {
+      cart.push({
+        product: product._id,
+        name: product.name,
+        price: product.price,
+        image: product.image,
+        category: product.category,
+        stock: product.stock,
+        quantity: 1
+      });
+    }
+    localStorage.setItem("cart", JSON.stringify(cart));
+    window.dispatchEvent(new Event("cartUpdated"));
+    setToastMsg({ show: true, msg: `Added "${product.name}" to cart! 🛒`, type: "success" });
+    setTimeout(() => setToastMsg({ show: false, msg: "", type: "success" }), 3000);
   };
 
   const handleSubscribe = (e) => {
@@ -124,11 +166,34 @@ function Dashboard() {
     <div className="page-wrapper">
       <Navbar />
 
+      {/* Top Announcement Trust Strip */}
+      <div className="ecommerce-trust-strip">
+        <div className="trust-strip-inner">
+          <div className="trust-strip-item">
+            <span className="trust-strip-icon">🚚</span>
+            <span><strong>Free Delivery</strong> on orders above ₹499</span>
+          </div>
+          <div className="trust-strip-item">
+            <span className="trust-strip-icon">🛡️</span>
+            <span><strong>100% Genuine</strong> Certified Agri Inputs</span>
+          </div>
+          <div className="trust-strip-item">
+            <span className="trust-strip-icon">💵</span>
+            <span><strong>Cash on Delivery</strong> Available</span>
+          </div>
+          <div className="trust-strip-item">
+            <span className="trust-strip-icon">📞</span>
+            <span><strong>Kisan Helpline:</strong> +91 98765 43210</span>
+          </div>
+        </div>
+      </div>
+
       <main className="dashboard-main">
         {/* ===== HERO SECTION ===== */}
         <section className="dashboard-hero">
           <div className="hero-content">
             <div className="hero-badge-wrap">
+              <span className="hero-badge">🌿 100% Certified Agricultural Inputs • Direct from Factory</span>
             </div>
             <h1 className="hero-title">
               {t("heroTitlePrefix")} <br /> <span>{t("heroTitleSuffix")}</span>
@@ -145,6 +210,23 @@ function Dashboard() {
                 {t("ourStoryBtn")}
               </button>
             </div>
+
+            <div className="hero-stats-mini">
+              <div className="h-stat">
+                <strong>50,000+</strong>
+                <span>Happy Farmers</span>
+              </div>
+              <div className="h-stat-div"></div>
+              <div className="h-stat">
+                <strong>500+</strong>
+                <span>Certified Inputs</span>
+              </div>
+              <div className="h-stat-div"></div>
+              <div className="h-stat">
+                <strong>4.9 ★</strong>
+                <span>Farmer Rating</span>
+              </div>
+            </div>
           </div>
 
           <div className="hero-visual">
@@ -155,10 +237,39 @@ function Dashboard() {
               className="main-hero-img"
               onError={(e) => { e.target.src = "https://mauliagroagency.in/images/shop-1.jpg"; }}
             />
+            <div className="floating-card top-card">
+              <span className="icon">🌱</span>
+              <div>
+                <strong>High Germination</strong>
+                <p>98% Lab Tested</p>
+              </div>
+            </div>
+            <div className="floating-card bottom-card">
+              <span className="icon">🚚</span>
+              <div>
+                <strong>Fast Delivery</strong>
+                <p>To Farm Gate</p>
+              </div>
+            </div>
           </div>
         </section>
-        <br></br>
-        <br></br>
+
+        {/* ===== SEASONAL MEGA PROMO BANNER ===== */}
+        <section className="seasonal-promo-banner">
+          <div className="promo-banner-inner">
+            <div className="promo-left">
+              <span className="promo-badge">🔥 KHARIF & RABI MEGA SALE</span>
+              <h2>Up to <strong>40% OFF</strong> on Certified Seeds & Bio-Fertilizers</h2>
+              <p>Empower your field with verified disease-resistant seeds, balanced NPK nutrients, and organic soil boosters.</p>
+            </div>
+            <div className="promo-right">
+              <button className="promo-btn" onClick={() => navigate("/products")}>
+                Shop Discount Deals →
+              </button>
+              <div className="promo-code-box">Coupon Code: <strong>SMARTKRUSHI</strong></div>
+            </div>
+          </div>
+        </section>
 
         {/* ===== CATEGORIES ===== */}
         <section className="dashboard-section bg-white">
@@ -207,9 +318,10 @@ function Dashboard() {
                     <div className="featured-p-img-box">
                       {product.mrp > product.price && (
                         <span className="save-tag">
-                          {t("save")} {toMarathiNumbers(discountPercent)}%
+                          {toMarathiNumbers(discountPercent)}% OFF
                         </span>
                       )}
+                      <span className="stock-tag-pill">🟢 In Stock</span>
                       <img
                         src={product.image}
                         alt={product.name}
@@ -220,7 +332,7 @@ function Dashboard() {
                       <span className="p-cat-badge">{getCategory(product.category)}</span>
                       <h4>{product.name}</h4>
                       <div className="rating-row font-medium">
-                        <span>{"⭐".repeat(Math.round(product.rating || 5))}</span>
+                        <span className="stars-gold">⭐⭐⭐⭐⭐</span>
                         <span className="score">({toMarathiNumbers(product.rating ? product.rating.toFixed(1) : "5.0")})</span>
                       </div>
                       <div className="p-price-row">
@@ -228,7 +340,14 @@ function Dashboard() {
                           <span className="price-now">₹{toMarathiNumbers(product.price)}</span>
                           {product.mrp > product.price && <span className="price-old">₹{toMarathiNumbers(product.mrp)}</span>}
                         </div>
-                        <span className="btn-buy-mini">{t("viewDetails")}</span>
+                        <button
+                          type="button"
+                          className="btn-add-cart-fast"
+                          onClick={(e) => handleAddToCart(e, product)}
+                          title="Add directly to cart"
+                        >
+                          🛒 Add to Cart
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -238,8 +357,52 @@ function Dashboard() {
           </section>
         )}
 
-        {/* ===== WHY CHOOSE SMART KRUSHI ===== */}
+        {/* ===== TOP PARTNER BRANDS ===== */}
         <section className="dashboard-section bg-white">
+          <div className="section-header text-center">
+            <h2 className="section-heading">Trusted Global Agri Brands</h2>
+            <p className="section-subheading">We partner directly with industry-leading manufacturers to guarantee 100% genuine inputs.</p>
+          </div>
+          <div className="brands-showcase-grid">
+            {topBrands.map((b, idx) => (
+              <div key={idx} className="brand-badge-card" onClick={() => navigate("/brand")}>
+                <div className="brand-badge-icon">{b.icon}</div>
+                <div className="brand-badge-name">{b.name}</div>
+                <div className="brand-badge-sub">{b.sub}</div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ===== AI CROP DOCTOR ADVISORY BANNER ===== */}
+        <section className="crop-doctor-section">
+          <div className="crop-doctor-card">
+            <div className="crop-doctor-content">
+              <span className="doctor-badge">🌾 AI Kisan Crop Doctor</span>
+              <h2>Instant Crop Advisory & Disease Diagnosis</h2>
+              <p>Have questions regarding pest attacks, fertilizer timing, or crop diseases? Ask our 24/7 AI Agri-Assistant directly!</p>
+              <div className="doctor-sample-chips">
+                <span>🍃 Cotton Whitefly Control</span>
+                <span>🌾 Sugarcane Fertilizer Dosage</span>
+                <span>🍅 Tomato Leaf Curl Solution</span>
+              </div>
+            </div>
+            <div className="crop-doctor-action">
+              <button
+                className="doctor-open-chat-btn"
+                onClick={() => {
+                  const chatBtn = document.querySelector(".chat-toggle-btn");
+                  if (chatBtn) chatBtn.click();
+                }}
+              >
+                💬 Open Crop Assistant
+              </button>
+            </div>
+          </div>
+        </section>
+
+        {/* ===== WHY CHOOSE SMART KRUSHI ===== */}
+        <section className="dashboard-section bg-light">
           <div className="why-choose-us-wrap">
             <div className="wcu-visual-col">
               <img
@@ -294,7 +457,7 @@ function Dashboard() {
         </section>
 
         {/* ===== FREQUENTLY ASKED QUESTIONS ===== */}
-        <section className="dashboard-section bg-light">
+        <section className="dashboard-section bg-white">
           <div className="section-header text-center">
             <h2 className="section-heading">{t("faqTitle")}</h2>
             <p className="section-subheading">{t("faqSub")}</p>
@@ -348,6 +511,13 @@ function Dashboard() {
           </div>
         </section>
       </main>
+
+      {/* Toast Notification */}
+      {toastMsg.show && (
+        <div className={`dash-toast ${toastMsg.type}`}>
+          {toastMsg.msg}
+        </div>
+      )}
 
       <Footer />
     </div>
