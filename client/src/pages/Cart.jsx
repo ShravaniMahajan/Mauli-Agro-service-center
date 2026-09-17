@@ -83,8 +83,14 @@ function Cart() {
     setLoading(true);
 
     try {
+      const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
       const orderData = {
         _id: "ord-" + Date.now(),
+        user: {
+          id: currentUser.id || currentUser._id,
+          username: currentUser.username || "Customer",
+          email: currentUser.email || ""
+        },
         items: cartItems.map((item) => ({
           product: item.product,
           name: item.name,
@@ -94,7 +100,7 @@ function Cart() {
         totalAmount: calculateTotal(),
         shippingAddress,
         paymentMethod,
-        status: "pending",
+        status: "Pending",
         createdAt: new Date().toISOString()
       };
 

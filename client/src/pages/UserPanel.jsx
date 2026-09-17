@@ -23,10 +23,42 @@ function UserPanel() {
           API.get("/orders/my-orders")
         ]);
         setProfile(profileRes.data.user);
-        setOrders(ordersRes.data);
+        setOrders(ordersRes.data || []);
       } catch (err) {
         console.error("Error loading panel data:", err);
         setProfile(storedUser);
+
+        // Fallback for offline / static hosting demo
+        const localOrders = JSON.parse(localStorage.getItem("mock_orders") || "[]");
+        const defaultOrders = [
+          {
+            _id: "ord-101",
+            user: { username: "Shravani Mahajan", email: "shravanimahajan0744@gmail.com" },
+            items: [{ name: "Super Hybrid Wheat Seeds (SH-40)", quantity: 2, price: 550 }],
+            totalAmount: 1100,
+            shippingAddress: "Plot 14, Main Road, Aitawade Budruk, Sangli",
+            paymentMethod: "Cash on Delivery",
+            status: "Delivered",
+            createdAt: new Date().toISOString()
+          },
+          ...localOrders
+        ];
+
+        const currentEmail = (storedUser.email || "").trim().toLowerCase();
+        const currentUsername = (storedUser.username || "").trim().toLowerCase();
+
+        const userOrders = defaultOrders.filter((o) => {
+          if (!o.user) return true;
+          const orderEmail = (o.user.email || "").trim().toLowerCase();
+          const orderUsername = (o.user.username || "").trim().toLowerCase();
+          return (
+            (currentEmail && orderEmail === currentEmail) ||
+            (currentUsername && orderUsername === currentUsername) ||
+            (!orderEmail && !orderUsername)
+          );
+        });
+
+        setOrders(userOrders.length > 0 ? userOrders : defaultOrders);
       } finally {
         setLoading(false);
       }
