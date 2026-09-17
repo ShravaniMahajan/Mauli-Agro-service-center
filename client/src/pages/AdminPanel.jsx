@@ -75,12 +75,12 @@ function AdminPanel() {
       const defaultOrders = [
         {
           _id: "ord-101",
-          user: { username: "Shravani Mahajan" },
+          user: { username: "Shravani Mahajan", email: "shravanimahajan0744@gmail.com" },
           items: [{ name: "Super Hybrid Wheat Seeds (SH-40)", quantity: 2, price: 550 }],
           totalAmount: 1100,
           shippingAddress: "Plot 14, Main Road, Aitawade Budruk, Sangli",
           paymentMethod: "Cash on Delivery",
-          status: "delivered",
+          status: "Delivered",
           createdAt: "2025-03-01T10:00:00.000Z"
         },
         ...localOrders
@@ -224,7 +224,17 @@ function AdminPanel() {
       showToast(`Order status updated to ${newStatus}`);
       fetchData();
     } catch (err) {
-      showToast("Failed to update status", "error");
+      // offline fallback
+      const updatedOrders = orders.map((o) =>
+        o._id === orderId ? { ...o, status: newStatus } : o
+      );
+      setOrders(updatedOrders);
+      const localOrders = JSON.parse(localStorage.getItem("mock_orders") || "[]");
+      const updatedLocal = localOrders.map((o) =>
+        o._id === orderId ? { ...o, status: newStatus } : o
+      );
+      localStorage.setItem("mock_orders", JSON.stringify(updatedLocal));
+      showToast(`Order status updated to ${newStatus}`);
     }
   };
 
@@ -235,12 +245,21 @@ function AdminPanel() {
 
   const filteredUsers = users.filter(
     (u) =>
-      u.username.toLowerCase().includes(search.toLowerCase()) ||
-      u.email.toLowerCase().includes(search.toLowerCase())
+      u.username?.toLowerCase().includes(search.toLowerCase()) ||
+      u.email?.toLowerCase().includes(search.toLowerCase())
   );
 
   const filteredProducts = products.filter((p) =>
-    p.name.toLowerCase().includes(search.toLowerCase())
+    p.name?.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const filteredOrders = orders.filter(
+    (o) =>
+      o._id?.toLowerCase().includes(search.toLowerCase()) ||
+      o.user?.username?.toLowerCase().includes(search.toLowerCase()) ||
+      o.user?.email?.toLowerCase().includes(search.toLowerCase()) ||
+      o.status?.toLowerCase().includes(search.toLowerCase()) ||
+      o.items?.some((i) => (i.name || i.product?.name || "").toLowerCase().includes(search.toLowerCase()))
   );
 
   return (
@@ -582,7 +601,17 @@ function AdminPanel() {
               <div className="admin-orders-tab">
                 <div className="admin-card">
                   <div className="admin-card-header">
-                    <h2>Orders Log ({orders.length})</h2>
+                    <h2>Orders Log ({filteredOrders.length})</h2>
+                    <div className="admin-search-wrap">
+                      <span>🔍</span>
+                      <input
+                        type="text"
+                        placeholder="Search orders, customers, items..."
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        className="admin-search-input"
+                      />
+                    </div>
                   </div>
                   <table className="admin-table">
                     <thead>
@@ -597,50 +626,62 @@ function AdminPanel() {
                       </tr>
                     </thead>
                     <tbody>
-                      {orders.map((o) => (
-                        <tr key={o._id}>
-                          <td className="mono-cell">{o._id}</td>
-                          <td>
-                            <div className="user-info-cell">
-                              <span><strong>{o.user?.username || "Unknown"}</strong></span>
-                              <span style={{ fontSize: "0.75rem", color: "#888" }}>{o.user?.email}</span>
-                            </div>
-                          </td>
-                          <td>
-                            <div className="order-items-col">
-                              {o.items.map((item, idx) => (
-                                <div key={idx} className="order-item-lbl">
-                                  • {item.product?.name || "Product"} (x{item.quantity})
-                                </div>
-                              ))}
-                            </div>
-                          </td>
-                          <td><strong>₹{o.totalAmount}</strong></td>
-                          <td>{new Date(o.createdAt).toLocaleDateString()}</td>
-                          <td>
-                            <span className={`role-badge ${o.status.toLowerCase()}`}>
-                              {o.status}
-                            </span>
-                          </td>
-                          <td>
-                            <select
-                              className="order-status-select"
-                              value={o.status}
-                              onChange={(e) => handleOrderStatusChange(o._id, e.target.value)}
-                            >
-                              <option value="Pending">Pending</option>
-                              <option value="Processing">Processing</option>
-                              <option value="Shipped">Shipped</option>
-                              <option value="Delivered">Delivered</option>
-                              <option value="Cancelled">Cancelled</option>
-                            </select>
-                          </td>
-                        </tr>
-                      ))}
-                      {orders.length === 0 && (
+                      {filteredOrders.map((o) => {
+                        const statusNormalized = o.status
+                          ? o.status.charAt(0).toUpperCase() + o.status.slice(1).toLowerCase()
+                          : "Pending";
+
+                        return (
+                          <tr key={o._id}>
+                            <td className="mono-cell">{o._id}</td>
+                            <td>
+                              <div className="user-info-cell">
+                                <span><strong>{o.user?.username || "Unknown"}</strong></span>
+                                <span style={{ fontSize: "0.75rem", color: "#888" }}>{o.user?.email || "N/A"}</span>
+                              </div>
+                            </td>
+                            <td>
+                              <div className="order-items-col">
+                                {o.items?.map((item, idx) => {
+                                  const itemName =
+                                    item.name ||
+                                    item.product?.name ||
+                                    (typeof item.product === "string" ? item.product : "Product");
+                                  return (
+                                    <div key={idx} className="order-item-lbl">
+                                      • {itemName} (x{item.quantity})
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </td>
+                            <td><strong>₹{o.totalAmount}</strong></td>
+                            <td>{new Date(o.createdAt).toLocaleDateString()}</td>
+                            <td>
+                              <span className={`role-badge ${statusNormalized.toLowerCase()}`}>
+                                {statusNormalized}
+                              </span>
+                            </td>
+                            <td>
+                              <select
+                                className="order-status-select"
+                                value={statusNormalized}
+                                onChange={(e) => handleOrderStatusChange(o._id, e.target.value)}
+                              >
+                                <option value="Pending">Pending</option>
+                                <option value="Processing">Processing</option>
+                                <option value="Shipped">Shipped</option>
+                                <option value="Delivered">Delivered</option>
+                                <option value="Cancelled">Cancelled</option>
+                              </select>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                      {filteredOrders.length === 0 && (
                         <tr>
                           <td colSpan={7} style={{ textAlign: "center", padding: "2rem", color: "#aaa" }}>
-                            No orders placed yet.
+                            No orders found.
                           </td>
                         </tr>
                       )}
@@ -655,11 +696,28 @@ function AdminPanel() {
 
       {/* --- ADD/EDIT PRODUCT MODAL --- */}
       {showProductModal && (
-        <div className="modal-backdrop">
-          <div className="modal-content">
+        <div className="modal-backdrop" onClick={() => setShowProductModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>{editingProduct ? "Edit Product" : "Add New Product"}</h2>
-              <button className="close-modal-btn" onClick={() => setShowProductModal(false)}>✖</button>
+              <div className="modal-header-left">
+                <button
+                  type="button"
+                  className="modal-back-btn"
+                  onClick={() => setShowProductModal(false)}
+                  title="Go back to products list"
+                >
+                  <span className="back-arrow-icon">←</span> Back
+                </button>
+                <h2>{editingProduct ? "Edit Product" : "Add New Product"}</h2>
+              </div>
+              <button
+                type="button"
+                className="close-modal-btn"
+                onClick={() => setShowProductModal(false)}
+                title="Close"
+              >
+                ✕
+              </button>
             </div>
             
             <form onSubmit={productForm.price && productForm.mrp && productForm.stock ? handleProductSubmit : (e) => e.preventDefault()} className="modal-form">
@@ -668,7 +726,7 @@ function AdminPanel() {
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Katyayani Insecticide"
+                  placeholder="e.g. Super Hybrid Wheat Seeds (SH-40)"
                   value={productForm.name}
                   onChange={(e) => setProductForm({ ...productForm, name: e.target.value })}
                 />
@@ -696,7 +754,7 @@ function AdminPanel() {
                     type="number"
                     required
                     min="0"
-                    placeholder="e.g. 50"
+                    placeholder="e.g. 100"
                     value={productForm.stock}
                     onChange={(e) => setProductForm({ ...productForm, stock: e.target.value })}
                   />
@@ -745,12 +803,22 @@ function AdminPanel() {
                   placeholder="Describe product uses, application rates..."
                   value={productForm.description}
                   onChange={(e) => setProductForm({ ...productForm, description: e.target.value })}
+                  rows="3"
                 ></textarea>
               </div>
 
-              <button type="submit" className="submit-modal-btn">
-                {editingProduct ? "Save Changes" : "Create Product"}
-              </button>
+              <div className="modal-actions-row">
+                <button
+                  type="button"
+                  className="cancel-modal-btn"
+                  onClick={() => setShowProductModal(false)}
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="submit-modal-btn">
+                  {editingProduct ? "Save Changes" : "Create Product"}
+                </button>
+              </div>
             </form>
           </div>
         </div>
