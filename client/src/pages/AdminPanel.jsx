@@ -245,6 +245,36 @@ function AdminPanel() {
     }
   };
 
+  // --- Review Handlers ---
+  const handleDeleteReview = async (productId, reviewId) => {
+    if (!window.confirm("Are you sure you want to remove this review?")) return;
+    try {
+      await API.delete(`/products/${productId}/reviews/${reviewId}`);
+    } catch (err) {
+      console.warn("API delete review error, updating local state", err);
+    }
+    const updatedProducts = products.map((p) => {
+      if (p._id === productId) {
+        const filteredReviews = (p.reviews || []).filter(
+          (r) => (r._id || r.id)?.toString() !== reviewId?.toString()
+        );
+        const newRating = filteredReviews.length
+          ? Number((filteredReviews.reduce((sum, r) => sum + r.rating, 0) / filteredReviews.length).toFixed(1))
+          : 5.0;
+        return {
+          ...p,
+          reviews: filteredReviews,
+          numReviews: filteredReviews.length,
+          rating: newRating
+        };
+      }
+      return p;
+    });
+    setProducts(updatedProducts);
+    localStorage.setItem("mock_products", JSON.stringify(updatedProducts));
+    showToast("Review deleted successfully");
+  };
+
   const handleLogout = () => {
     localStorage.clear();
     navigate("/login");
@@ -313,6 +343,12 @@ function AdminPanel() {
             <span>📊</span> Reports / Analytics
           </button>
           <button
+            className={`admin-nav-item ${activeTab === "reviews" ? "active" : ""}`}
+            onClick={() => { setActiveTab("reviews"); setSearch(""); }}
+          >
+            <span>⭐</span> Customer Ratings & Reviews
+          </button>
+          <button
             className="admin-nav-item"
             onClick={() => navigate("/")}
             title="Go to main store"
@@ -346,6 +382,7 @@ function AdminPanel() {
               {activeTab === "products" && "Product Catalog Management"}
               {activeTab === "orders" && "Customer Orders Management"}
               {activeTab === "analytics" && "Reports & Analytics"}
+              {activeTab === "reviews" && "Customer Ratings & Reviews"}
             </h1>
             <p className="admin-page-sub">Welcome back, {adminUser.username} 👋</p>
           </div>
@@ -848,6 +885,142 @@ function AdminPanel() {
                 </div>
               );
             })()}
+
+            {/* --- REVIEWS & RATINGS TAB --- */}
+            {activeTab === "reviews" && (() => {
+              // Flatten all reviews from products
+              const allReviews = products.flatMap((p) =>
+                (p.reviews || []).map((r) => ({
+                  ...r,
+                  productId: p._id,
+                  productName: p.name,
+                  productImage: p.image,
+                  productCategory: p.category
+                }))
+              );
+
+              // Calculate overall metrics
+              const totalReviewCount = allReviews.length;
+              const avgScore = totalReviewCount
+                ? (allReviews.reduce((sum, r) => sum + (r.rating || 5), 0) / totalReviewCount).toFixed(1)
+                : "5.0";
+              const fiveStarCount = allReviews.filter((r) => r.rating === 5).length;
+              const positivePercent = totalReviewCount
+                ? Math.round((allReviews.filter((r) => r.rating >= 4).length / totalReviewCount) * 100)
+                : 100;
+
+              // Filtered reviews by search
+              const filteredReviews = allReviews.filter((r) => {
+                const term = search.toLowerCase();
+                return (
+                  (r.username || "").toLowerCase().includes(term) ||
+                  (r.productName || "").toLowerCase().includes(term) ||
+                  (r.comment || "").toLowerCase().includes(term)
+                );
+              });
+
+              return (
+                <div className="admin-reviews-tab">
+                  {/* Reviews Stats Row */}
+                  <div className="admin-stats-grid">
+                    <div className="admin-stat-card green">
+                      <div className="stat-icon">⭐</div>
+                      <div className="stat-info">
+                        <div className="stat-num">{avgScore} / 5.0</div>
+                        <div className="stat-label">Average Store Rating</div>
+                      </div>
+                    </div>
+                    <div className="admin-stat-card blue">
+                      <div className="stat-icon">💬</div>
+                      <div className="stat-info">
+                        <div className="stat-num">{totalReviewCount}</div>
+                        <div className="stat-label">Total Customer Reviews</div>
+                      </div>
+                    </div>
+                    <div className="admin-stat-card purple">
+                      <div className="stat-icon">🌟</div>
+                      <div className="stat-info">
+                        <div className="stat-num">{fiveStarCount}</div>
+                        <div className="stat-label">5-Star Ratings</div>
+                      </div>
+                    </div>
+                    <div className="admin-stat-card orange">
+                      <div className="stat-icon">📈</div>
+                      <div className="stat-info">
+                        <div className="stat-num">{positivePercent}%</div>
+                        <div className="stat-label">Positive Sentiment (≥4★)</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Reviews Card & List */}
+                  <div className="admin-card" style={{ marginTop: "1.5rem" }}>
+                    <div className="admin-card-header">
+                      <div>
+                        <h2>Customer Ratings & Feedback</h2>
+                        <p style={{ fontSize: "0.82rem", color: "var(--admin-muted)", margin: 0 }}>
+                          Showing {filteredReviews.length} of {totalReviewCount} verified reviews
+                        </p>
+                      </div>
+                      <div className="admin-actions-row">
+                        <input
+                          type="text"
+                          className="admin-search-input"
+                          placeholder="Search reviewer, product, or comment..."
+                          value={search}
+                          onChange={(e) => setSearch(e.target.value)}
+                        />
+                      </div>
+                    </div>
+
+                    {filteredReviews.length === 0 ? (
+                      <div style={{ padding: "3rem", textAlign: "center", color: "var(--admin-muted)" }}>
+                        <div style={{ fontSize: "2.5rem", marginBottom: "0.5rem" }}>⭐</div>
+                        <p>No customer reviews found matching your search.</p>
+                      </div>
+                    ) : (
+                      <div className="admin-reviews-list">
+                        {filteredReviews.map((rev, idx) => (
+                          <div key={rev._id || idx} className="admin-review-item">
+                            <div className="review-product-thumb">
+                              <img src={rev.productImage} alt={rev.productName} />
+                            </div>
+                            <div className="review-main-content">
+                              <div className="review-top-row">
+                                <div>
+                                  <h4 className="review-product-title">{rev.productName}</h4>
+                                  <span className="review-category-badge">{rev.productCategory}</span>
+                                </div>
+                                <div className="review-stars-badge">
+                                  {"★".repeat(rev.rating)}{"☆".repeat(5 - rev.rating)}
+                                  <span className="review-score-num">({rev.rating}/5)</span>
+                                </div>
+                              </div>
+                              <p className="review-comment-text">"{rev.comment}"</p>
+                              <div className="review-author-meta">
+                                <span>👤 <strong>{rev.username}</strong></span>
+                                {rev.userEmail && <span>📧 {rev.userEmail}</span>}
+                                <span>📅 {new Date(rev.createdAt || Date.now()).toLocaleDateString()}</span>
+                              </div>
+                            </div>
+                            <div className="review-action-col">
+                              <button
+                                className="action-btn delete"
+                                title="Delete Review"
+                                onClick={() => handleDeleteReview(rev.productId, rev._id || rev.id)}
+                              >
+                                🗑️ Remove
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
+
           </>
         )}
       </main>

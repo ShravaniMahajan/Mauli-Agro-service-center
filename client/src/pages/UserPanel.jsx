@@ -32,6 +32,18 @@ function UserPanel() {
   const [savingProfile, setSavingProfile] = useState(false);
   const [profileMsg, setProfileMsg] = useState({ text: "", type: "" });
 
+  // Rating Modal State
+  const [ratingModal, setRatingModal] = useState({
+    show: false,
+    orderId: "",
+    productName: "",
+    productId: "",
+    rating: 5,
+    comment: "",
+    submitting: false
+  });
+  const [ratingToast, setRatingToast] = useState({ show: false, msg: "", type: "success" });
+
   const token = localStorage.getItem("token");
 
   useEffect(() => {
@@ -144,6 +156,86 @@ function UserPanel() {
     } finally {
       setSavingProfile(false);
     }
+  };
+
+  // --- Rating Review Submit Handler ---
+  const handleOpenRating = (order, item) => {
+    const pName = item.name || item.product?.name || (typeof item.product === "string" ? item.product : "Product");
+    const pId = item.product?._id || item.product || `prod-${Date.now()}`;
+    setRatingModal({
+      show: true,
+      orderId: order._id,
+      productName: pName,
+      productId: pId,
+      rating: 5,
+      comment: "",
+      submitting: false
+    });
+  };
+
+  const handleSubmitRating = async (e) => {
+    e.preventDefault();
+    if (!ratingModal.comment.trim()) {
+      setRatingToast({ show: true, msg: "Please write a few words about your experience.", type: "error" });
+      return;
+    }
+
+    setRatingModal((prev) => ({ ...prev, submitting: true }));
+    const curUser = profile || storedUser;
+
+    const newReview = {
+      _id: `rev-${Date.now()}`,
+      username: curUser.username || "Verified Customer",
+      userEmail: curUser.email || "",
+      rating: Number(ratingModal.rating),
+      comment: ratingModal.comment.trim(),
+      createdAt: new Date().toISOString()
+    };
+
+    try {
+      if (ratingModal.productId && !ratingModal.productId.startsWith("prod-")) {
+        await API.post(`/products/${ratingModal.productId}/reviews`, {
+          username: newReview.username,
+          userEmail: newReview.userEmail,
+          rating: newReview.rating,
+          comment: newReview.comment
+        });
+      }
+    } catch (apiErr) {
+      console.warn("Backend review post failed, fallback to local storage", apiErr);
+    }
+
+    // Update mock_products in localStorage so Admin Panel and Products immediately show it
+    try {
+      const localProds = JSON.parse(localStorage.getItem("mock_products") || "[]");
+      let matched = false;
+      const updatedProds = localProds.map((p) => {
+        if (p._id === ratingModal.productId || p.name === ratingModal.productName) {
+          matched = true;
+          const reviews = [...(p.reviews || []), newReview];
+          const avg = Number((reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1));
+          return { ...p, reviews, numReviews: reviews.length, rating: avg };
+        }
+        return p;
+      });
+
+      if (matched) {
+        localStorage.setItem("mock_products", JSON.stringify(updatedProds));
+      } else if (localProds.length > 0) {
+        // Attach to first product or create item
+        localProds[0].reviews = [...(localProds[0].reviews || []), { ...newReview, productName: ratingModal.productName }];
+        localStorage.setItem("mock_products", JSON.stringify(localProds));
+      }
+    } catch (e) {}
+
+    // Save user rated flag in localStorage
+    const ratedOrders = JSON.parse(localStorage.getItem("user_rated_items") || "{}");
+    ratedOrders[`${ratingModal.orderId}_${ratingModal.productName}`] = ratingModal.rating;
+    localStorage.setItem("user_rated_items", JSON.stringify(ratedOrders));
+
+    setRatingModal({ show: false, orderId: "", productName: "", productId: "", rating: 5, comment: "", submitting: false });
+    setRatingToast({ show: true, msg: "Thank you! Your rating has been shared with the Admin & Store. ⭐", type: "success" });
+    setTimeout(() => setRatingToast({ show: false, msg: "", type: "success" }), 4500);
   };
 
   const user = profile || storedUser;
@@ -437,8 +529,31 @@ function UserPanel() {
                               </div>
 
                               <div className="user-order-footer">
-                                <span>Total Paid:</span>
-                                <span className="order-total-amount">₹{order.totalAmount}</span>
+                                <div className="user-order-actions">
+                                  {order.items.map((item, idx) => {
+                                    const itemName = item.name || item.product?.name || (typeof item.product === "string" ? item.product : "Product");
+                                    const ratedItems = JSON.parse(localStorage.getItem("user_rated_items") || "{}");
+                                    const existingRating = ratedItems[`${order._id}_${itemName}`];
+
+                                    return existingRating ? (
+                                      <span key={idx} className="order-rated-badge">
+                                        ✓ Rated {"★".repeat(existingRating)}
+                                      </span>
+                                    ) : (
+                                      <button
+                                        key={idx}
+                                        className="order-rate-btn"
+                                        onClick={() => handleOpenRating(order, item)}
+                                      >
+                                        ⭐ Rate {itemName.length > 20 ? `${itemName.slice(0, 20)}...` : itemName}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                                <div className="user-order-total-box">
+                                  <span>Total Paid:</span>
+                                  <span className="order-total-amount">₹{order.totalAmount}</span>
+                                </div>
                               </div>
                             </div>
                           ))}
@@ -454,6 +569,87 @@ function UserPanel() {
           )}
         </div>
       </main>
+
+      {/* Toast Notification */}
+      {ratingToast.show && (
+        <div className={`up-toast-notification ${ratingToast.type}`}>
+          {ratingToast.msg}
+        </div>
+      )}
+
+      {/* --- RATING MODAL --- */}
+      {ratingModal.show && (
+        <div className="up-modal-backdrop" onClick={() => setRatingModal({ ...ratingModal, show: false })}>
+          <div className="up-rating-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="up-modal-header">
+              <div>
+                <h3>Rate & Review Product</h3>
+                <p className="up-modal-subtitle">{ratingModal.productName}</p>
+              </div>
+              <button
+                className="up-modal-close"
+                onClick={() => setRatingModal({ ...ratingModal, show: false })}
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmitRating} className="up-rating-form">
+              <div className="up-star-selector-box">
+                <label>Select Your Rating:</label>
+                <div className="up-stars-interactive">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      type="button"
+                      key={star}
+                      className={`star-btn ${star <= ratingModal.rating ? "active" : ""}`}
+                      onClick={() => setRatingModal({ ...ratingModal, rating: star })}
+                    >
+                      ★
+                    </button>
+                  ))}
+                  <span className="star-rating-text">
+                    {ratingModal.rating === 5 && "Excellent! 🌟"}
+                    {ratingModal.rating === 4 && "Very Good! 👍"}
+                    {ratingModal.rating === 3 && "Average 👌"}
+                    {ratingModal.rating === 2 && "Poor ⚠️"}
+                    {ratingModal.rating === 1 && "Terrible ❌"}
+                  </span>
+                </div>
+              </div>
+
+              <div className="up-review-input-box">
+                <label>Your Feedback / Experience:</label>
+                <textarea
+                  rows={4}
+                  required
+                  placeholder="Tell us about the product quality, germination, crop performance, or delivery..."
+                  value={ratingModal.comment}
+                  onChange={(e) => setRatingModal({ ...ratingModal, comment: e.target.value })}
+                />
+              </div>
+
+              <div className="up-rating-modal-actions">
+                <button
+                  type="submit"
+                  className="up-submit-rating-btn"
+                  disabled={ratingModal.submitting}
+                >
+                  {ratingModal.submitting ? "Submitting..." : "Submit Rating & Review ⭐"}
+                </button>
+                <button
+                  type="button"
+                  className="up-cancel-modal-btn"
+                  onClick={() => setRatingModal({ ...ratingModal, show: false })}
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       <Footer />
     </div>
   );
