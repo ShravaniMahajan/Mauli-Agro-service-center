@@ -128,32 +128,73 @@ function Dashboard() {
         {/* ===== HERO SECTION ===== */}
         <section className="dashboard-hero">
           <div className="hero-content">
+            <div className="hero-badge-wrap">
+              <span className="hero-badge">
+                <span className="badge-pulse"></span>
+                🌱 100% Certified Agricultural Supplies • Direct From Factory
+              </span>
+            </div>
 
             <h1 className="hero-title">
-              {t("heroTitlePrefix")} <br /> <span>{t("heroTitleSuffix")}</span>
+              {t("heroTitlePrefix")} <br /> <span className="hero-title-gradient">{t("heroTitleSuffix")}</span>
             </h1>
+
             <p className="hero-subtitle">
               {t("heroSubtitle")}
             </p>
 
             <div className="hero-cta">
-              <button className="btn-primary btn-lg" onClick={() => navigate("/products")}>
-                {t("shopProductsBtn")}
+              <button className="btn-hero-primary" onClick={() => navigate("/products")}>
+                <span>{t("shopProductsBtn")}</span>
+                <span className="btn-arrow">→</span>
               </button>
-              <button className="btn-outline-light btn-lg" onClick={() => navigate("/about")}>
-                {t("ourStoryBtn")}
+              <button className="btn-hero-outline" onClick={() => navigate("/about")}>
+                <span>{t("ourStoryBtn")}</span>
               </button>
+            </div>
+
+            <div className="hero-trust-metrics">
+              <div className="metric-item">
+                <strong>500+</strong>
+                <span>Certified Inputs</span>
+              </div>
+              <div className="metric-divider"></div>
+              <div className="metric-item">
+                <strong>50,000+</strong>
+                <span>Happy Farmers</span>
+              </div>
+              <div className="metric-divider"></div>
+              <div className="metric-item">
+                <strong>4.9 ★</strong>
+                <span>Trusted Rating</span>
+              </div>
             </div>
           </div>
 
           <div className="hero-visual">
             <div className="visual-backdrop"></div>
-            <img
-              src="https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800&q=80"
-              alt="Smart Krushi Farm Land"
-              className="main-hero-img"
-              onError={(e) => { e.target.src = "https://mauliagroagency.in/images/shop-1.jpg"; }}
-            />
+            <div className="hero-img-container">
+              <img
+                src="https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800&q=80"
+                alt="Smart Krushi Farm Land"
+                className="main-hero-img"
+                onError={(e) => { e.target.src = "https://mauliagroagency.in/images/shop-1.jpg"; }}
+              />
+              <div className="hero-floating-card card-top">
+                <span className="card-icon">🌱</span>
+                <div>
+                  <strong>100% Genuine</strong>
+                  <p>Lab Tested Quality</p>
+                </div>
+              </div>
+              <div className="hero-floating-card card-bottom">
+                <span className="card-icon">🚚</span>
+                <div>
+                  <strong>Fast Delivery</strong>
+                  <p>Direct to Farm Gate</p>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
         <br></br>

@@ -100,9 +100,6 @@ function Navbar() {
 
         {/* Right side: Search + Language Toggle + Cart + Profile */}
         <div className="agro-nav-right">
-          <div className="agro-search-box">
-            <input type="text" placeholder={t("searchPlaceholder")} />
-          </div>
 
           {/* Language Toggle Button */}
           <button className="agro-lang-toggle-btn" onClick={toggleLanguage} title="Switch Language / भाषा बदला">
