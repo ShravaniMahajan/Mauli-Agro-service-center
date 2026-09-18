@@ -27,11 +27,7 @@ function Login() {
       localStorage.setItem("user", JSON.stringify(res.data.user));
       setMessage({ text: "Login successful! Redirecting...", type: "success" });
       setTimeout(() => {
-        if (res.data.user.role === "admin") {
-          navigate("/admin-panel");
-        } else {
-          navigate("/");
-        }
+        navigate("/");
       }, 800);
     } catch (err) {
       // 1. Check registered local users
@@ -52,7 +48,7 @@ function Login() {
         localStorage.setItem("token", "demo-token-" + Date.now());
         localStorage.setItem("user", JSON.stringify(userData));
         setMessage({ text: "Login successful! Redirecting...", type: "success" });
-        setTimeout(() => navigate(userData.role === "admin" ? "/admin-panel" : "/"), 800);
+        setTimeout(() => navigate("/"), 800);
         return;
       }
 
@@ -61,8 +57,8 @@ function Login() {
         const userData = { _id: "demo-admin", username: "Admin", email: "admin@smartkrushi.com", role: "admin" };
         localStorage.setItem("token", "demo-token-" + Date.now());
         localStorage.setItem("user", JSON.stringify(userData));
-        setMessage({ text: "Login successful! Redirecting to Admin Panel...", type: "success" });
-        setTimeout(() => navigate("/admin-panel"), 800);
+        setMessage({ text: "Login successful! Redirecting...", type: "success" });
+        setTimeout(() => navigate("/"), 800);
         return;
       }
 
