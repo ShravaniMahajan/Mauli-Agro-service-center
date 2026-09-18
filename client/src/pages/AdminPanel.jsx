@@ -266,7 +266,7 @@ function AdminPanel() {
     <div className="admin-layout">
       {/* Sidebar */}
       <aside className="admin-sidebar">
-        <div className="admin-logo">
+        <div className="admin-logo" onClick={() => navigate("/")} style={{ cursor: "pointer" }} title="Go to Storefront">
           <span className="admin-logo-icon">🌿</span>
           <div>
             <div className="admin-logo-title">Smart Krushi</div>
@@ -305,6 +305,13 @@ function AdminPanel() {
           >
             <span>📊</span> Reports / Analytics
           </button>
+          <button
+            className="admin-nav-item"
+            onClick={() => navigate("/")}
+            title="Go to main store"
+          >
+            <span>🏠</span> Go to Site
+          </button>
         </nav>
 
         <div className="admin-sidebar-footer">
@@ -331,10 +338,14 @@ function AdminPanel() {
               {activeTab === "users" && "Manage User Accounts"}
               {activeTab === "products" && "Product Catalog Management"}
               {activeTab === "orders" && "Customer Orders Management"}
+              {activeTab === "analytics" && "Reports & Analytics"}
             </h1>
             <p className="admin-page-sub">Welcome back, {adminUser.username} 👋</p>
           </div>
-          <div className="admin-topbar-actions">
+          <div className="admin-topbar-actions" style={{ display: "flex", gap: "0.75rem" }}>
+            <button className="admin-refresh-btn" onClick={() => navigate("/")} title="Go to Storefront">
+              🏠 Go to Site
+            </button>
             <button className="admin-refresh-btn" onClick={fetchData}>🔄 Refresh</button>
           </div>
         </header>
@@ -683,20 +694,156 @@ function AdminPanel() {
             )}
 
             {/* --- ANALYTICS TAB --- */}
-            {activeTab === "analytics" && (
-              <div className="admin-analytics-tab">
-                <div className="admin-card">
-                  <div className="admin-card-header">
-                    <h2>Reports & Analytics</h2>
+            {activeTab === "analytics" && (() => {
+              // Calculate Analytics Data
+              const validOrders = orders.filter(o => o.status !== "Cancelled");
+              const totalRevenue = validOrders.reduce((sum, o) => sum + o.totalAmount, 0);
+              const totalItemsSold = validOrders.reduce((sum, o) => {
+                return sum + (o.items ? o.items.reduce((itemSum, item) => itemSum + (item.quantity || 1), 0) : 0);
+              }, 0);
+              const avgOrderValue = validOrders.length > 0 ? (totalRevenue / validOrders.length).toFixed(2) : 0;
+              
+              // Top Products
+              const productSales = {};
+              validOrders.forEach(o => {
+                if (o.items) {
+                  o.items.forEach(item => {
+                    const name = item.name || item.product?.name || item.product || "Unknown";
+                    productSales[name] = (productSales[name] || 0) + (item.quantity || 1);
+                  });
+                }
+              });
+              const topProducts = Object.entries(productSales)
+                .map(([name, qty]) => ({ name, qty }))
+                .sort((a, b) => b.qty - a.qty)
+                .slice(0, 5);
+
+              // Low Stock
+              const lowStockProducts = products
+                .filter(p => p.stock <= 20)
+                .sort((a, b) => a.stock - b.stock)
+                .slice(0, 5);
+
+              // Order Status
+              const statusCounts = orders.reduce((acc, o) => {
+                const status = o.status ? o.status.charAt(0).toUpperCase() + o.status.slice(1).toLowerCase() : "Pending";
+                acc[status] = (acc[status] || 0) + 1;
+                return acc;
+              }, {});
+
+              return (
+                <div className="admin-analytics-tab">
+                  {/* Summary Cards */}
+                  <div className="admin-stats-grid">
+                    <div className="admin-stat-card green">
+                      <div className="stat-icon">📈</div>
+                      <div className="stat-info">
+                        <div className="stat-num">₹{totalRevenue.toLocaleString()}</div>
+                        <div className="stat-label">Total Revenue</div>
+                      </div>
+                    </div>
+                    <div className="admin-stat-card blue">
+                      <div className="stat-icon">🛍️</div>
+                      <div className="stat-info">
+                        <div className="stat-num">{validOrders.length}</div>
+                        <div className="stat-label">Successful Orders</div>
+                      </div>
+                    </div>
+                    <div className="admin-stat-card purple">
+                      <div className="stat-icon">🛒</div>
+                      <div className="stat-info">
+                        <div className="stat-num">{totalItemsSold}</div>
+                        <div className="stat-label">Items Sold</div>
+                      </div>
+                    </div>
+                    <div className="admin-stat-card orange">
+                      <div className="stat-icon">📊</div>
+                      <div className="stat-info">
+                        <div className="stat-num">₹{avgOrderValue}</div>
+                        <div className="stat-label">Avg. Order Value</div>
+                      </div>
+                    </div>
                   </div>
-                  <div style={{ padding: "2rem", textAlign: "center", color: "var(--admin-muted)" }}>
-                    <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>📊</div>
-                    <h3>Analytics Dashboard</h3>
-                    <p style={{ marginTop: "0.5rem" }}>Detailed sales reports, popular products analysis, and stock overview will be available here soon.</p>
+
+                  <div className="admin-double-card-row" style={{ marginTop: "1.5rem" }}>
+                    {/* Top Products */}
+                    <div className="admin-card">
+                      <div className="admin-card-header">
+                        <h2>Top Selling Products</h2>
+                      </div>
+                      <table className="admin-table">
+                        <thead>
+                          <tr>
+                            <th>Product Name</th>
+                            <th>Quantity Sold</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {topProducts.length > 0 ? topProducts.map((p, idx) => (
+                            <tr key={idx}>
+                              <td>{p.name}</td>
+                              <td><span className="stock-lbl ok">{p.qty} units</span></td>
+                            </tr>
+                          )) : (
+                            <tr><td colSpan="2" style={{ textAlign: "center", color: "#888" }}>No sales data available</td></tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Low Stock Alerts */}
+                    <div className="admin-card">
+                      <div className="admin-card-header">
+                        <h2>Low Stock Alerts</h2>
+                        <button className="admin-view-all" onClick={() => setActiveTab("products")}>Manage →</button>
+                      </div>
+                      <table className="admin-table">
+                        <thead>
+                          <tr>
+                            <th>Product Name</th>
+                            <th>Current Stock</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {lowStockProducts.length > 0 ? lowStockProducts.map(p => (
+                            <tr key={p._id}>
+                              <td>{p.name}</td>
+                              <td>
+                                <span className={`stock-lbl ${p.stock <= 0 ? "out" : "low"}`}>
+                                  {p.stock} units
+                                </span>
+                              </td>
+                            </tr>
+                          )) : (
+                            <tr><td colSpan="2" style={{ textAlign: "center", color: "#888" }}>All products are well stocked</td></tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
+
+                  {/* Order Status Breakdown */}
+                  <div className="admin-card" style={{ marginTop: "1.5rem" }}>
+                    <div className="admin-card-header">
+                      <h2>Order Status Breakdown</h2>
+                    </div>
+                    <div style={{ display: "flex", gap: "1rem", padding: "1.5rem", flexWrap: "wrap" }}>
+                      {Object.entries(statusCounts).map(([status, count]) => (
+                        <div key={status} style={{
+                          flex: 1, minWidth: "150px", padding: "1rem", 
+                          background: "var(--admin-bg)", borderRadius: "10px",
+                          border: "1px solid var(--admin-border)", textAlign: "center"
+                        }}>
+                          <div style={{ fontSize: "1.5rem", fontWeight: "bold", color: "var(--admin-text)" }}>{count}</div>
+                          <div style={{ fontSize: "0.85rem", color: "var(--admin-muted)", marginTop: "0.5rem" }}>{status}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
                 </div>
-              </div>
-            )}
+              );
+            })()}
           </>
         )}
       </main>
