@@ -106,11 +106,13 @@ function Navbar() {
             🌐 <span className="lang-text">{lang === "en" ? "मराठी" : "English"}</span>
           </button>
 
-          {/* Cart Button */}
-          <button className="agro-cart-btn" onClick={() => navigate("/cart")} title="Shopping Cart">
-            🛒 <span className="cart-text">Cart</span>
-            {cartCount > 0 && <span className="agro-cart-badge">{cartCount}</span>}
-          </button>
+          {/* Cart Button — hidden for admins */}
+          {user?.role !== "admin" && (
+            <button className="agro-cart-btn" onClick={() => navigate("/cart")} title="Shopping Cart">
+              🛒 <span className="cart-text">Cart</span>
+              {cartCount > 0 && <span className="agro-cart-badge">{cartCount}</span>}
+            </button>
+          )}
 
           {user ? (
             /* Profile Avatar Button & Dropdown */
