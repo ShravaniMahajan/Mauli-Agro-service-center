@@ -14,6 +14,24 @@ function UserPanel() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState(location.state?.tab || "profile");
 
+  // Synchronize tab if user navigates or clicks dropdown menu item while already on this page
+  useEffect(() => {
+    if (location.state?.tab) {
+      setActiveTab(location.state.tab);
+    }
+  }, [location.state]);
+
+  // Profile Edit State
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState({
+    username: "",
+    email: "",
+    phone: "",
+    address: ""
+  });
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [profileMsg, setProfileMsg] = useState({ text: "", type: "" });
+
   const token = localStorage.getItem("token");
 
   useEffect(() => {
@@ -70,6 +88,62 @@ function UserPanel() {
   const handleLogout = () => {
     localStorage.clear();
     navigate("/login");
+  };
+
+  const handleStartEdit = () => {
+    const cur = profile || storedUser;
+    setEditForm({
+      username: cur.username || "",
+      email: cur.email || "",
+      phone: cur.phone || "",
+      address: cur.address || (orders[0]?.shippingAddress || "")
+    });
+    setProfileMsg({ text: "", type: "" });
+    setIsEditing(true);
+  };
+
+  const handleSaveProfile = async (e) => {
+    e.preventDefault();
+    if (!editForm.username.trim() || !editForm.email.trim()) {
+      setProfileMsg({ text: "Username and email cannot be empty.", type: "error" });
+      return;
+    }
+
+    setSavingProfile(true);
+    try {
+      const cur = profile || storedUser;
+      let updatedUser = {
+        ...cur,
+        username: editForm.username.trim(),
+        email: editForm.email.trim(),
+        phone: editForm.phone.trim(),
+        address: editForm.address.trim()
+      };
+
+      try {
+        const res = await API.put("/users/profile", editForm);
+        if (res.data?.user) {
+          updatedUser = { ...updatedUser, ...res.data.user };
+        }
+      } catch (apiErr) {
+        console.warn("Backend update error, saving to local state", apiErr);
+      }
+
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+      setProfile(updatedUser);
+      setIsEditing(false);
+      setProfileMsg({ text: "Profile updated successfully! ✨", type: "success" });
+
+      window.dispatchEvent(new Event("userUpdated"));
+      window.dispatchEvent(new Event("storage"));
+
+      setTimeout(() => setProfileMsg({ text: "", type: "" }), 4000);
+    } catch (err) {
+      console.error("Save profile error:", err);
+      setProfileMsg({ text: "Failed to save profile changes.", type: "error" });
+    } finally {
+      setSavingProfile(false);
+    }
   };
 
   const user = profile || storedUser;
@@ -163,29 +237,134 @@ function UserPanel() {
                 {activeTab === "profile" && (
                   <div className="up-profile-tab">
                     <div className="up-info-card">
-                      <h3>Account Information</h3>
-                      <div className="up-info-grid">
-                        <div className="up-info-row">
-                          <span className="up-info-label">👤 Username</span>
-                          <span className="up-info-value">{user.username}</span>
-                        </div>
-                        <div className="up-info-row">
-                          <span className="up-info-label">📧 Email</span>
-                          <span className="up-info-value">{user.email}</span>
-                        </div>
-                        <div className="up-info-row">
-                          <span className="up-info-label">🛡️ Role</span>
-                          <span className="up-info-value capitalize">{user.role || "user"}</span>
-                        </div>
-                        <div className="up-info-row">
-                          <span className="up-info-label">🔐 Auth</span>
-                          <span className="up-info-value">JWT Token Active</span>
-                        </div>
-                        <div className="up-info-row">
-                          <span className="up-info-label">🌐 Status</span>
-                          <span className="up-info-value up-status-active">● Active</span>
-                        </div>
+                      <div className="up-info-card-header">
+                        <h3>Account Information</h3>
+                        {!isEditing && (
+                          <button
+                            className="up-edit-profile-btn"
+                            onClick={handleStartEdit}
+                          >
+                            ✏️ Edit Profile
+                          </button>
+                        )}
                       </div>
+
+                      {profileMsg.text && (
+                        <div className={`up-feedback-msg ${profileMsg.type}`}>
+                          {profileMsg.text}
+                        </div>
+                      )}
+
+                      {isEditing ? (
+                        <form onSubmit={handleSaveProfile} className="up-edit-form">
+                          <div className="up-edit-field">
+                            <label>👤 Full Name / Username</label>
+                            <input
+                              type="text"
+                              required
+                              value={editForm.username}
+                              onChange={(e) =>
+                                setEditForm({ ...editForm, username: e.target.value })
+                              }
+                              placeholder="Enter your name"
+                            />
+                          </div>
+
+                          <div className="up-edit-field">
+                            <label>📧 Email Address</label>
+                            <input
+                              type="email"
+                              required
+                              value={editForm.email}
+                              onChange={(e) =>
+                                setEditForm({ ...editForm, email: e.target.value })
+                              }
+                              placeholder="Enter your email"
+                            />
+                          </div>
+
+                          <div className="up-edit-field">
+                            <label>📱 Phone Number</label>
+                            <input
+                              type="tel"
+                              value={editForm.phone}
+                              onChange={(e) =>
+                                setEditForm({ ...editForm, phone: e.target.value })
+                              }
+                              placeholder="e.g. +91 98765 43210"
+                            />
+                          </div>
+
+                          <div className="up-edit-field">
+                            <label>📍 Delivery / Farm Address</label>
+                            <textarea
+                              rows={2}
+                              value={editForm.address}
+                              onChange={(e) =>
+                                setEditForm({ ...editForm, address: e.target.value })
+                              }
+                              placeholder="Enter your delivery address"
+                            />
+                          </div>
+
+                          <div className="up-edit-actions">
+                            <button
+                              type="submit"
+                              className="up-save-btn"
+                              disabled={savingProfile}
+                            >
+                              {savingProfile ? "Saving..." : "💾 Save Changes"}
+                            </button>
+                            <button
+                              type="button"
+                              className="up-cancel-btn"
+                              onClick={() => {
+                                setIsEditing(false);
+                                setProfileMsg({ text: "", type: "" });
+                              }}
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </form>
+                      ) : (
+                        <div className="up-info-grid">
+                          <div className="up-info-row">
+                            <span className="up-info-label">👤 Username</span>
+                            <span className="up-info-value">{user.username}</span>
+                          </div>
+                          <div className="up-info-row">
+                            <span className="up-info-label">📧 Email</span>
+                            <span className="up-info-value">{user.email}</span>
+                          </div>
+                          <div className="up-info-row">
+                            <span className="up-info-label">📱 Phone</span>
+                            <span className="up-info-value">
+                              {user.phone || <em className="up-muted-txt">Not added yet</em>}
+                            </span>
+                          </div>
+                          <div className="up-info-row">
+                            <span className="up-info-label">📍 Delivery Address</span>
+                            <span className="up-info-value">
+                              {user.address || orders[0]?.shippingAddress || (
+                                <em className="up-muted-txt">Not added yet</em>
+                              )}
+                            </span>
+                          </div>
+                          <div className="up-info-row">
+                            <span className="up-info-label">🛡️ Role</span>
+                            <span className="up-info-value capitalize">{user.role || "user"}</span>
+                          </div>
+                          <div className="up-info-row">
+                            <span className="up-info-label">🔐 Auth</span>
+                            <span className="up-info-value">JWT Token Active</span>
+                          </div>
+                          <div className="up-info-row">
+                            <span className="up-info-label">🌐 Status</span>
+                            <span className="up-info-value up-status-active">● Active</span>
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     {/* Welcome Banner */}

@@ -12,30 +12,39 @@ function Navbar() {
   const [orderCount, setOrderCount] = useState(0);
   const dropdownRef = useRef(null);
 
-  let user = null;
-  try {
-    const userStr = localStorage.getItem("user");
-    if (userStr && userStr !== "undefined") user = JSON.parse(userStr);
-  } catch (e) {}
+  const [user, setUser] = useState(() => {
+    try {
+      const userStr = localStorage.getItem("user");
+      return userStr && userStr !== "undefined" ? JSON.parse(userStr) : null;
+    } catch (e) {
+      return null;
+    }
+  });
 
-  // Sync cart count
+  // Sync cart count & user state
   const updateCounts = () => {
     try {
       const cart = JSON.parse(localStorage.getItem("cart") || "[]");
       const totalItems = cart.reduce((acc, item) => acc + (Number(item.quantity) || 1), 0);
       setCartCount(totalItems);
 
+      const userStr = localStorage.getItem("user");
+      const curUser = userStr && userStr !== "undefined" ? JSON.parse(userStr) : null;
+      setUser(curUser);
+
       const localOrders = JSON.parse(localStorage.getItem("mock_orders") || "[]");
-      setOrderCount(localOrders.length || (user ? 1 : 0));
+      setOrderCount(localOrders.length || (curUser ? 1 : 0));
     } catch (e) {}
   };
 
   useEffect(() => {
     updateCounts();
     window.addEventListener("cartUpdated", updateCounts);
+    window.addEventListener("userUpdated", updateCounts);
     window.addEventListener("storage", updateCounts);
     return () => {
       window.removeEventListener("cartUpdated", updateCounts);
+      window.removeEventListener("userUpdated", updateCounts);
       window.removeEventListener("storage", updateCounts);
     };
   }, []);

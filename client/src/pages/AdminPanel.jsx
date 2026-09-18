@@ -18,6 +18,12 @@ function AdminPanel() {
   const [search, setSearch] = useState("");
   const [toast, setToast] = useState({ show: false, msg: "", type: "success" });
 
+  useEffect(() => {
+    if (location.state?.tab) {
+      setActiveTab(location.state.tab);
+    }
+  }, [location.state]);
+
   // Product Form states
   const [productForm, setProductForm] = useState({
     name: "",
