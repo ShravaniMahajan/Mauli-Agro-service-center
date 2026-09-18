@@ -31,18 +31,22 @@ function Register() {
         u.email?.toLowerCase().trim() === formData.email.toLowerCase().trim()
     );
 
+    const nowIso = new Date().toISOString();
     const newUserObj = {
+      _id: "usr-" + Date.now(),
       id: "usr-" + Date.now(),
       username: formData.username.trim(),
       email: formData.email.trim(),
       password: formData.password,
-      role: "user"
+      role: "user",
+      createdAt: nowIso,
+      lastLogin: nowIso
     };
 
     if (existingIndex > -1) {
-      localUsers[existingIndex] = newUserObj;
+      localUsers[existingIndex] = { ...localUsers[existingIndex], ...newUserObj };
     } else {
-      localUsers.push(newUserObj);
+      localUsers.unshift(newUserObj);
     }
     localStorage.setItem("mock_users", JSON.stringify(localUsers));
 

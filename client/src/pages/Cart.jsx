@@ -104,13 +104,15 @@ function Cart() {
         createdAt: new Date().toISOString()
       };
 
+      // Always save to local orders for instant reactivity
+      const localOrders = JSON.parse(localStorage.getItem("mock_orders") || "[]");
+      localOrders.unshift(orderData);
+      localStorage.setItem("mock_orders", JSON.stringify(localOrders));
+
       try {
         await API.post("/orders", orderData);
       } catch (e) {
-        // Save to local orders
-        const localOrders = JSON.parse(localStorage.getItem("mock_orders") || "[]");
-        localOrders.push(orderData);
-        localStorage.setItem("mock_orders", JSON.stringify(localOrders));
+        console.log("Order saved locally (backend sync skipped or offline)");
       }
 
       // Decrement local stock dynamically so UI is in sync without reload

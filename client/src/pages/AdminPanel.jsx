@@ -44,40 +44,74 @@ function AdminPanel() {
 
   const fetchData = async () => {
     try {
-      const [statsRes, usersRes, productsRes, ordersRes] = await Promise.all([
-        API.get("/admin/stats"),
-        API.get("/admin/users"),
-        API.get("/products"),
-        API.get("/orders")
-      ]);
-      setStats(statsRes.data);
-      setUsers(usersRes.data.users);
-      setProducts(productsRes.data);
-      setOrders(ordersRes.data);
-    } catch (err) {
-      // Local demo fallback with dynamic local registered users
-      const localUsers = JSON.parse(localStorage.getItem("mock_users") || "[]");
+      let apiUsers = [];
+      let apiOrders = [];
+      let apiProducts = [];
+      let apiStats = null;
+
+      try {
+        const [statsRes, usersRes, productsRes, ordersRes] = await Promise.all([
+          API.get("/admin/stats"),
+          API.get("/admin/users"),
+          API.get("/products"),
+          API.get("/orders")
+        ]);
+        apiStats = statsRes.data;
+        apiUsers = usersRes.data.users || [];
+        apiProducts = productsRes.data || [];
+        apiOrders = ordersRes.data || [];
+      } catch (e) {
+        console.log("API fetch error or offline, syncing with local storage:", e);
+      }
+
+      // Base seed users
       const baseUsers = [
-        { _id: "usr-admin", username: "admin", email: "admin@smartkrushi.com", role: "admin", createdAt: "2025-01-01" },
-        { _id: "usr-shravani", username: "Shravani Mahajan", email: "shravanimahajan0744@gmail.com", role: "user", createdAt: "2025-02-14" },
-        { _id: "usr-ramesh", username: "farmer_ramesh", email: "ramesh@gmail.com", role: "user", createdAt: "2025-01-10" },
-        { _id: "usr-patil", username: "patil_krushi", email: "patil@yahoo.com", role: "user", createdAt: "2025-02-05" }
+        { _id: "usr-admin", username: "admin", email: "admin@smartkrushi.com", role: "admin", createdAt: "2025-01-01", lastLogin: "2025-01-01" },
+        { _id: "usr-shravani", username: "Shravani Mahajan", email: "shravanimahajan0744@gmail.com", role: "user", createdAt: "2025-02-14", lastLogin: "2025-02-14" },
+        { _id: "usr-ramesh", username: "farmer_ramesh", email: "ramesh@gmail.com", role: "user", createdAt: "2025-01-10", lastLogin: "2025-01-10" },
+        { _id: "usr-patil", username: "patil_krushi", email: "patil@yahoo.com", role: "user", createdAt: "2025-02-05", lastLogin: "2025-02-05" }
       ];
 
-      // Merge base users with any newly registered users avoiding duplicates by email/username
-      const combinedUsers = [...baseUsers];
+      const localUsers = JSON.parse(localStorage.getItem("mock_users") || "[]");
+
+      // Merge all users: apiUsers + localUsers + baseUsers
+      const combinedUsersMap = new Map();
+
+      // Put API users
+      apiUsers.forEach((u) => {
+        const key = (u.email || u.username || u._id || "").toLowerCase().trim();
+        if (key) combinedUsersMap.set(key, u);
+      });
+
+      // Overlay / add local users (has newest lastLogin info)
       localUsers.forEach((lu) => {
-        if (!combinedUsers.some((u) => u.email?.toLowerCase() === lu.email?.toLowerCase() || u.username?.toLowerCase() === lu.username?.toLowerCase())) {
-          combinedUsers.push({
-            _id: lu.id || "usr-" + Date.now(),
-            username: lu.username,
-            email: lu.email,
-            role: lu.role || "user",
-            createdAt: new Date().toISOString().split("T")[0]
+        const key = (lu.email || lu.username || lu.id || lu._id || "").toLowerCase().trim();
+        if (key) {
+          const existing = combinedUsersMap.get(key) || {};
+          combinedUsersMap.set(key, {
+            _id: lu._id || lu.id || existing._id || "usr-" + Date.now(),
+            ...existing,
+            ...lu,
+            lastLogin: lu.lastLogin || lu.createdAt || existing.lastLogin || existing.createdAt
           });
         }
       });
 
+      // Add base users if not already present
+      baseUsers.forEach((bu) => {
+        const key = (bu.email || bu.username).toLowerCase().trim();
+        if (!combinedUsersMap.has(key)) {
+          combinedUsersMap.set(key, bu);
+        }
+      });
+
+      const finalUsers = Array.from(combinedUsersMap.values()).sort((a, b) => {
+        const timeA = new Date(a.lastLogin || a.createdAt || a.updatedAt || 0).getTime();
+        const timeB = new Date(b.lastLogin || b.createdAt || b.updatedAt || 0).getTime();
+        return timeB - timeA;
+      });
+
+      // Orders Merge
       const localOrders = JSON.parse(localStorage.getItem("mock_orders") || "[]");
       const defaultOrders = [
         {
@@ -88,22 +122,45 @@ function AdminPanel() {
           shippingAddress: "Plot 14, Main Road, Aitawade Budruk, Sangli",
           paymentMethod: "Cash on Delivery",
           status: "Delivered",
-          createdAt: new Date().toISOString()
-        },
-        ...localOrders
+          createdAt: "2025-02-15T14:20:00.000Z"
+        }
       ];
 
-      const localCustomProducts = JSON.parse(localStorage.getItem("mock_products") || "[]");
-      const combinedProducts = localCustomProducts.length > 0 ? localCustomProducts : mockProducts;
-
-      setUsers(combinedUsers);
-      setProducts(combinedProducts);
-      setOrders(defaultOrders);
-      setStats({
-        totalUsers: combinedUsers.filter(u => u.role !== "admin").length,
-        totalAdmins: combinedUsers.filter(u => u.role === "admin").length,
-        total: combinedUsers.length
+      const combinedOrdersMap = new Map();
+      apiOrders.forEach((o) => {
+        const orderId = o._id || o.id;
+        if (orderId) combinedOrdersMap.set(orderId, o);
       });
+      localOrders.forEach((o) => {
+        const orderId = o._id || o.id;
+        if (orderId) combinedOrdersMap.set(orderId, o);
+      });
+      defaultOrders.forEach((o) => {
+        if (!combinedOrdersMap.has(o._id)) {
+          combinedOrdersMap.set(o._id, o);
+        }
+      });
+
+      const finalOrders = Array.from(combinedOrdersMap.values()).sort((a, b) => {
+        const timeA = new Date(a.createdAt || 0).getTime();
+        const timeB = new Date(b.createdAt || 0).getTime();
+        return timeB - timeA;
+      });
+
+      // Products Merge
+      const localCustomProducts = JSON.parse(localStorage.getItem("mock_products") || "[]");
+      const finalProducts = apiProducts.length > 0 ? apiProducts : (localCustomProducts.length > 0 ? localCustomProducts : mockProducts);
+
+      setUsers(finalUsers);
+      setOrders(finalOrders);
+      setProducts(finalProducts);
+      setStats({
+        totalUsers: finalUsers.filter(u => u.role !== "admin").length,
+        totalAdmins: finalUsers.filter(u => u.role === "admin").length,
+        total: finalUsers.length
+      });
+    } catch (err) {
+      console.error("fetchData total failure:", err);
     } finally {
       setLoading(false);
     }
@@ -438,7 +495,7 @@ function AdminPanel() {
                   {/* Recent Users Table */}
                   <div className="admin-card">
                     <div className="admin-card-header">
-                      <h2>Recent Users</h2>
+                      <h2>Recent Users ({users.length})</h2>
                       <button className="admin-view-all" onClick={() => setActiveTab("users")}>View All →</button>
                     </div>
                     <table className="admin-table">
@@ -447,21 +504,34 @@ function AdminPanel() {
                           <th>Username</th>
                           <th>Email</th>
                           <th>Role</th>
+                          <th>Last Active</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {users.slice(0, 5).map((u) => (
-                          <tr key={u._id}>
-                            <td>
-                              <div className="user-cell">
-                                <div className="user-avatar-sm">{u.username[0].toUpperCase()}</div>
-                                {u.username}
-                              </div>
+                        {users.slice(0, 5).map((u) => {
+                          const dateVal = u.lastLogin || u.createdAt;
+                          const dateStr = dateVal ? new Date(dateVal).toLocaleDateString() : "Active";
+                          return (
+                            <tr key={u._id || u.id}>
+                              <td>
+                                <div className="user-cell">
+                                  <div className="user-avatar-sm">{(u.username || "U")[0].toUpperCase()}</div>
+                                  <span>{u.username}</span>
+                                </div>
+                              </td>
+                              <td>{u.email}</td>
+                              <td><span className={`role-badge ${u.role || "user"}`}>{u.role || "user"}</span></td>
+                              <td style={{ fontSize: "0.85rem", color: "#94a3b8" }}>{dateStr}</td>
+                            </tr>
+                          );
+                        })}
+                        {users.length === 0 && (
+                          <tr>
+                            <td colSpan={4} style={{ textAlign: "center", padding: "1.5rem", color: "#888" }}>
+                              No users found.
                             </td>
-                            <td>{u.email}</td>
-                            <td><span className={`role-badge ${u.role}`}>{u.role}</span></td>
                           </tr>
-                        ))}
+                        )}
                       </tbody>
                     </table>
                   </div>
@@ -469,25 +539,47 @@ function AdminPanel() {
                   {/* Recent Orders Table */}
                   <div className="admin-card">
                     <div className="admin-card-header">
-                      <h2>Recent Orders</h2>
+                      <h2>Recent Orders ({orders.length})</h2>
                       <button className="admin-view-all" onClick={() => setActiveTab("orders")}>View All →</button>
                     </div>
                     <table className="admin-table">
                       <thead>
                         <tr>
                           <th>Order ID</th>
+                          <th>Customer</th>
                           <th>Total</th>
                           <th>Status</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {orders.slice(0, 5).map((o) => (
-                          <tr key={o._id}>
-                            <td className="mono-cell">{o._id}</td>
-                            <td>₹{o.totalAmount}</td>
-                            <td><span className={`role-badge ${o.status.toLowerCase()}`}>{o.status}</span></td>
+                        {orders.slice(0, 5).map((o) => {
+                          const statusNormalized = o.status
+                            ? o.status.charAt(0).toUpperCase() + o.status.slice(1).toLowerCase()
+                            : "Pending";
+                          const customerName = o.user?.username || o.user?.name || (typeof o.user === "string" ? o.user : "Customer");
+                          const customerEmail = o.user?.email || "";
+
+                          return (
+                            <tr key={o._id || o.id}>
+                              <td className="mono-cell">{o._id || o.id}</td>
+                              <td>
+                                <div className="user-info-cell">
+                                  <span><strong>{customerName}</strong></span>
+                                  {customerEmail && <span style={{ fontSize: "0.75rem", color: "#888" }}>{customerEmail}</span>}
+                                </div>
+                              </td>
+                              <td><strong>₹{o.totalAmount}</strong></td>
+                              <td><span className={`role-badge ${statusNormalized.toLowerCase()}`}>{statusNormalized}</span></td>
+                            </tr>
+                          );
+                        })}
+                        {orders.length === 0 && (
+                          <tr>
+                            <td colSpan={4} style={{ textAlign: "center", padding: "1.5rem", color: "#888" }}>
+                              No orders found.
+                            </td>
                           </tr>
-                        ))}
+                        )}
                       </tbody>
                     </table>
                   </div>

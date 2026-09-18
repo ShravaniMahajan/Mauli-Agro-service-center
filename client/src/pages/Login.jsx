@@ -15,6 +15,49 @@ function Login() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
+  const recordUserLogin = (userData) => {
+    try {
+      const nowIso = new Date().toISOString();
+      const userWithTime = {
+        ...userData,
+        lastLogin: nowIso
+      };
+      localStorage.setItem("user", JSON.stringify(userWithTime));
+
+      const localUsers = JSON.parse(localStorage.getItem("mock_users") || "[]");
+      const userEmail = (userWithTime.email || "").toLowerCase().trim();
+      const userUname = (userWithTime.username || "").toLowerCase().trim();
+
+      const existingIndex = localUsers.findIndex(
+        (u) =>
+          (userEmail && u.email?.toLowerCase().trim() === userEmail) ||
+          (userUname && u.username?.toLowerCase().trim() === userUname)
+      );
+
+      if (existingIndex > -1) {
+        localUsers[existingIndex] = {
+          ...localUsers[existingIndex],
+          ...userWithTime,
+          lastLogin: nowIso
+        };
+      } else {
+        localUsers.unshift({
+          _id: userWithTime._id || userWithTime.id || "usr-" + Date.now(),
+          id: userWithTime.id || userWithTime._id || "usr-" + Date.now(),
+          username: userWithTime.username,
+          email: userWithTime.email || `${userUname}@smartkrushi.com`,
+          role: userWithTime.role || "user",
+          createdAt: userWithTime.createdAt || nowIso,
+          lastLogin: nowIso
+        });
+      }
+
+      localStorage.setItem("mock_users", JSON.stringify(localUsers));
+    } catch (e) {
+      console.error("Error storing user login state:", e);
+    }
+  };
+
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -24,7 +67,7 @@ function Login() {
     try {
       const res = await API.post("/auth/login", { username: username.trim(), password });
       localStorage.setItem("token", res.data.token);
-      localStorage.setItem("user", JSON.stringify(res.data.user));
+      recordUserLogin(res.data.user);
       setMessage({ text: "Login successful! Redirecting...", type: "success" });
       setTimeout(() => {
         navigate("/");
@@ -40,13 +83,14 @@ function Login() {
 
       if (matchedLocal) {
         const userData = {
-          _id: matchedLocal.id || "local-1",
+          _id: matchedLocal.id || matchedLocal._id || "local-1",
           username: matchedLocal.username,
           email: matchedLocal.email,
-          role: matchedLocal.role || "user"
+          role: matchedLocal.role || "user",
+          createdAt: matchedLocal.createdAt || new Date().toISOString()
         };
         localStorage.setItem("token", "demo-token-" + Date.now());
-        localStorage.setItem("user", JSON.stringify(userData));
+        recordUserLogin(userData);
         setMessage({ text: "Login successful! Redirecting...", type: "success" });
         setTimeout(() => navigate("/"), 800);
         return;
@@ -54,9 +98,9 @@ function Login() {
 
       // 2. Admin Accounts (admin / admin@smartkrushi.com)
       if (inputVal === "admin" || inputVal === "admin@smartkrushi.com" || inputVal.startsWith("admin")) {
-        const userData = { _id: "demo-admin", username: "Admin", email: "admin@smartkrushi.com", role: "admin" };
+        const userData = { _id: "demo-admin", username: "Admin", email: "admin@smartkrushi.com", role: "admin", createdAt: "2025-01-01" };
         localStorage.setItem("token", "demo-token-" + Date.now());
-        localStorage.setItem("user", JSON.stringify(userData));
+        recordUserLogin(userData);
         setMessage({ text: "Login successful! Redirecting...", type: "success" });
         setTimeout(() => navigate("/"), 800);
         return;
@@ -66,9 +110,9 @@ function Login() {
       if (inputVal.includes("farmer") || inputVal.includes("shravani") || inputVal.includes("maharashtra") || inputVal.includes("krushi")) {
         const displayName = inputVal.includes("shravani") ? "Shravani Mahajan" : "Farmer Ramesh";
         const displayEmail = inputVal.includes("shravani") ? "shravanimahajan0744@gmail.com" : "farmer@smartkrushi.com";
-        const userData = { _id: "demo-user", username: displayName, email: displayEmail, role: "user" };
+        const userData = { _id: "demo-user", username: displayName, email: displayEmail, role: "user", createdAt: "2025-02-14" };
         localStorage.setItem("token", "demo-token-" + Date.now());
-        localStorage.setItem("user", JSON.stringify(userData));
+        recordUserLogin(userData);
         setMessage({ text: "Login successful! Redirecting...", type: "success" });
         setTimeout(() => navigate("/"), 800);
         return;
@@ -80,10 +124,11 @@ function Login() {
           _id: "demo-" + Date.now(),
           username: username.trim(),
           email: inputVal.includes("@") ? inputVal : `${inputVal}@gmail.com`,
-          role: "user"
+          role: "user",
+          createdAt: new Date().toISOString()
         };
         localStorage.setItem("token", "demo-token-" + Date.now());
-        localStorage.setItem("user", JSON.stringify(userData));
+        recordUserLogin(userData);
         setMessage({ text: "Login successful! Redirecting...", type: "success" });
         setTimeout(() => navigate("/"), 800);
         return;

@@ -5,6 +5,8 @@ const Product = require("../models/Product");
 const authMiddleware = require("../middleware/authMiddleware");
 const adminMiddleware = require("../middleware/adminMiddleware");
 
+const mongoose = require("mongoose");
+
 // POST place order (User only)
 router.post("/", authMiddleware, async (req, res) => {
   try {
@@ -21,43 +23,57 @@ router.post("/", authMiddleware, async (req, res) => {
     let totalAmount = 0;
     const validatedItems = [];
 
-    // Verify stock and calculate total
+    // Verify products and calculate total
     for (const item of items) {
-      const product = await Product.findById(item.product);
-      if (!product) {
-        return res.status(404).json({ message: `Product ${item.product} not found` });
+      let product = null;
+      if (item.product && mongoose.Types.ObjectId.isValid(item.product)) {
+        product = await Product.findById(item.product);
+      }
+      if (!product && item.name) {
+        product = await Product.findOne({ name: item.name });
       }
 
-      if (product.stock < item.quantity) {
+      const itemPrice = Number(item.price || (product ? product.price : 0));
+      const itemName = item.name || (product ? product.name : "Agro Product");
+      const itemQty = Number(item.quantity || 1);
+
+      if (product && product.stock !== undefined && product.stock < itemQty) {
         return res.status(400).json({ message: `Insufficient stock for product ${product.name}. Available: ${product.stock}` });
       }
 
-      totalAmount += product.price * item.quantity;
+      totalAmount += itemPrice * itemQty;
       validatedItems.push({
-        product: product._id,
-        quantity: item.quantity,
-        price: product.price
+        product: product ? product._id : (item.product || "prod-" + Date.now()),
+        name: itemName,
+        quantity: itemQty,
+        price: itemPrice
       });
     }
 
-    // Deduct stock
-    for (const item of items) {
-      await Product.findByIdAndUpdate(item.product, {
-        $inc: { stock: -item.quantity }
-      });
+    // Deduct stock if product exists in DB
+    for (const item of validatedItems) {
+      if (item.product && mongoose.Types.ObjectId.isValid(item.product)) {
+        await Product.findByIdAndUpdate(item.product, {
+          $inc: { stock: -item.quantity }
+        });
+      }
     }
 
     const newOrder = new Order({
       user: req.user.id,
       items: validatedItems,
-      totalAmount,
+      totalAmount: req.body.totalAmount || totalAmount,
       shippingAddress,
       paymentMethod: paymentMethod || "Cash on Delivery"
     });
 
     const saved = await newOrder.save();
-    res.status(201).json(saved);
+    const populatedOrder = await Order.findById(saved._id)
+      .populate("user", "username email");
+
+    res.status(201).json(populatedOrder || saved);
   } catch (error) {
+    console.error("Order creation error:", error);
     res.status(500).json({ message: error.message });
   }
 });

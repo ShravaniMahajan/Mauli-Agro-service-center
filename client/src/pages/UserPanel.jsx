@@ -49,15 +49,21 @@ function UserPanel() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [profileRes, ordersRes] = await Promise.all([
-          API.get("/users/profile"),
-          API.get("/orders/my-orders")
-        ]);
-        setProfile(profileRes.data.user);
-        setOrders(ordersRes.data || []);
-      } catch (err) {
-        console.error("Error loading panel data:", err);
-        setProfile(storedUser);
+        let apiProfile = null;
+        let apiOrders = [];
+        try {
+          const [profileRes, ordersRes] = await Promise.all([
+            API.get("/users/profile"),
+            API.get("/orders/my-orders")
+          ]);
+          apiProfile = profileRes.data?.user;
+          apiOrders = ordersRes.data || [];
+        } catch (err) {
+          console.log("API profile/orders fallback to local:", err);
+        }
+
+        const effectiveProfile = apiProfile || storedUser;
+        setProfile(effectiveProfile);
 
         // Fallback for offline / static hosting demo
         const localOrders = JSON.parse(localStorage.getItem("mock_orders") || "[]");
@@ -70,15 +76,30 @@ function UserPanel() {
             shippingAddress: "Plot 14, Main Road, Aitawade Budruk, Sangli",
             paymentMethod: "Cash on Delivery",
             status: "Delivered",
-            createdAt: new Date().toISOString()
-          },
-          ...localOrders
+            createdAt: "2025-02-15T14:20:00.000Z"
+          }
         ];
 
-        const currentEmail = (storedUser.email || "").trim().toLowerCase();
-        const currentUsername = (storedUser.username || "").trim().toLowerCase();
+        const combinedOrdersMap = new Map();
+        apiOrders.forEach((o) => {
+          const id = o._id || o.id;
+          if (id) combinedOrdersMap.set(id, o);
+        });
+        localOrders.forEach((o) => {
+          const id = o._id || o.id;
+          if (id) combinedOrdersMap.set(id, o);
+        });
+        defaultOrders.forEach((o) => {
+          if (!combinedOrdersMap.has(o._id)) {
+            combinedOrdersMap.set(o._id, o);
+          }
+        });
 
-        const userOrders = defaultOrders.filter((o) => {
+        const allOrders = Array.from(combinedOrdersMap.values());
+        const currentEmail = (effectiveProfile.email || storedUser.email || "").trim().toLowerCase();
+        const currentUsername = (effectiveProfile.username || storedUser.username || "").trim().toLowerCase();
+
+        const userOrders = allOrders.filter((o) => {
           if (!o.user) return true;
           const orderEmail = (o.user.email || "").trim().toLowerCase();
           const orderUsername = (o.user.username || "").trim().toLowerCase();
@@ -87,9 +108,9 @@ function UserPanel() {
             (currentUsername && orderUsername === currentUsername) ||
             (!orderEmail && !orderUsername)
           );
-        });
+        }).sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
 
-        setOrders(userOrders.length > 0 ? userOrders : defaultOrders);
+        setOrders(userOrders.length > 0 ? userOrders : allOrders.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)));
       } finally {
         setLoading(false);
       }

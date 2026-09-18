@@ -6,7 +6,7 @@ const adminMiddleware = require("../middleware/adminMiddleware");
 // GET all users (admin only)
 router.get("/users", adminMiddleware, async (req, res) => {
     try {
-        const users = await User.find().select("-password");
+        const users = await User.find().select("-password").sort({ lastLogin: -1, createdAt: -1 });
         res.json({ users });
     } catch (error) {
         res.status(500).json({ message: error.message });
