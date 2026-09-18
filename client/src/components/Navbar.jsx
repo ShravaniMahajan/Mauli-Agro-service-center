@@ -161,7 +161,7 @@ function Navbar() {
                         className="popup-menu-item"
                         onClick={() => {
                           setShowProfileMenu(false);
-                          navigate("/admin-panel");
+                          navigate("/admin-panel", { state: { tab: "dashboard" } });
                         }}
                       >
                         <span className="menu-icon">🛡️</span> Admin Dashboard
@@ -206,7 +206,7 @@ function Navbar() {
                         className="popup-menu-item"
                         onClick={() => {
                           setShowProfileMenu(false);
-                          navigate("/admin-panel");
+                          navigate("/admin-panel", { state: { tab: "products" } });
                         }}
                       >
                         <span className="menu-icon">📦</span> Manage Products

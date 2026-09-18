@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import API from "../services/api";
 import mockProducts from "../data/mockProducts";
 import "./AdminPanel.css";
 
 function AdminPanel() {
   const navigate = useNavigate();
+  const location = useLocation();
   const adminUser = JSON.parse(localStorage.getItem("user") || "{}");
 
   const [stats, setStats] = useState({ totalUsers: 24, totalAdmins: 2, total: 26 });
@@ -13,7 +14,7 @@ function AdminPanel() {
   const [products, setProducts] = useState(mockProducts);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState("dashboard");
+  const [activeTab, setActiveTab] = useState(location.state?.tab || "dashboard");
   const [search, setSearch] = useState("");
   const [toast, setToast] = useState({ show: false, msg: "", type: "success" });
 
