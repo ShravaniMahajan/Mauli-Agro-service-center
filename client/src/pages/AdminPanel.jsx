@@ -342,10 +342,7 @@ function AdminPanel() {
             </h1>
             <p className="admin-page-sub">Welcome back, {adminUser.username} 👋</p>
           </div>
-          <div className="admin-topbar-actions" style={{ display: "flex", gap: "0.75rem" }}>
-            <button className="admin-refresh-btn" onClick={() => navigate("/")} title="Go to Storefront">
-              🏠 Go to Site
-            </button>
+          <div className="admin-topbar-actions">
             <button className="admin-refresh-btn" onClick={fetchData}>🔄 Refresh</button>
           </div>
         </header>
