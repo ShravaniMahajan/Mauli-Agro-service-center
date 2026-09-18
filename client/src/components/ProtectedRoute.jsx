@@ -14,3 +14,12 @@ export function AdminRoute({ children }) {
   if (user.role !== "admin") return <Navigate to="/user-panel" replace />;
   return children;
 }
+
+// Blocks admin users from accessing user-only pages (e.g. Cart)
+export function UserOnlyRoute({ children }) {
+  const token = localStorage.getItem("token");
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  if (!token) return <Navigate to="/login" replace />;
+  if (user.role === "admin") return <Navigate to="/admin-panel" replace />;
+  return children;
+}

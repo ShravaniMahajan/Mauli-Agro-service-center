@@ -9,7 +9,7 @@ import AdminPanel from "./pages/AdminPanel";
 import UserPanel from "./pages/UserPanel";
 import Products from "./pages/Products";
 import Cart from "./pages/Cart";
-import { PrivateRoute, AdminRoute } from "./components/ProtectedRoute";
+import { PrivateRoute, AdminRoute, UserOnlyRoute } from "./components/ProtectedRoute";
 import { LanguageProvider } from "./context/LanguageContext";
 import Chatbot from "./components/Chatbot";
 import "./index.css";
@@ -27,7 +27,7 @@ function App() {
           <Route path="/brand" element={<Brand />} />
           <Route path="/about" element={<About />} />
           <Route path="/products" element={<Products />} />
-          <Route path="/cart" element={<PrivateRoute><Cart /></PrivateRoute>} />
+          <Route path="/cart" element={<UserOnlyRoute><Cart /></UserOnlyRoute>} />
           <Route path="/admin-panel" element={<AdminRoute><AdminPanel /></AdminRoute>} />
           <Route path="/user-panel" element={<PrivateRoute><UserPanel /></PrivateRoute>} />
         </Routes>
