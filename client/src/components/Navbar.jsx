@@ -187,25 +187,41 @@ function Navbar() {
                       </>
                     )}
 
-                    <button
-                      className="popup-menu-item"
-                      onClick={() => {
-                        setShowProfileMenu(false);
-                        navigate("/products");
-                      }}
-                    >
-                      <span className="menu-icon">🛍️</span> Browse Products
-                    </button>
+                    {user.role !== "admin" && (
+                      <button
+                        className="popup-menu-item"
+                        onClick={() => {
+                          setShowProfileMenu(false);
+                          navigate("/products");
+                        }}
+                      >
+                        <span className="menu-icon">🛍️</span> Browse Products
+                      </button>
+                    )}
 
-                    <button
-                      className="popup-menu-item"
-                      onClick={() => {
-                        setShowProfileMenu(false);
-                        navigate("/cart");
-                      }}
-                    >
-                      <span className="menu-icon">🛒</span> View Shopping Cart
-                    </button>
+                    {user.role === "admin" && (
+                      <button
+                        className="popup-menu-item"
+                        onClick={() => {
+                          setShowProfileMenu(false);
+                          navigate("/admin-panel");
+                        }}
+                      >
+                        <span className="menu-icon">📦</span> Manage Products
+                      </button>
+                    )}
+
+                    {user.role !== "admin" && (
+                      <button
+                        className="popup-menu-item"
+                        onClick={() => {
+                          setShowProfileMenu(false);
+                          navigate("/cart");
+                        }}
+                      >
+                        <span className="menu-icon">🛒</span> View Shopping Cart
+                      </button>
+                    )}
 
                     <div className="popup-menu-divider"></div>
 

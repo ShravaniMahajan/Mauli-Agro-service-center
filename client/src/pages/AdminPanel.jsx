@@ -279,7 +279,19 @@ function AdminPanel() {
             className={`admin-nav-item ${activeTab === "dashboard" ? "active" : ""}`}
             onClick={() => { setActiveTab("dashboard"); setSearch(""); }}
           >
-            <span>📊</span> Dashboard
+            <span>🛡️</span> Admin Dashboard
+          </button>
+          <button
+            className={`admin-nav-item ${activeTab === "products" ? "active" : ""}`}
+            onClick={() => { setActiveTab("products"); setSearch(""); }}
+          >
+            <span>📦</span> Manage Products
+          </button>
+          <button
+            className={`admin-nav-item ${activeTab === "orders" ? "active" : ""}`}
+            onClick={() => { setActiveTab("orders"); setSearch(""); }}
+          >
+            <span>📋</span> Manage Orders
           </button>
           <button
             className={`admin-nav-item ${activeTab === "users" ? "active" : ""}`}
@@ -288,22 +300,10 @@ function AdminPanel() {
             <span>👥</span> Manage Users
           </button>
           <button
-            className={`admin-nav-item ${activeTab === "products" ? "active" : ""}`}
-            onClick={() => { setActiveTab("products"); setSearch(""); }}
+            className={`admin-nav-item ${activeTab === "analytics" ? "active" : ""}`}
+            onClick={() => { setActiveTab("analytics"); setSearch(""); }}
           >
-            <span>🛍️</span> Manage Products
-          </button>
-          <button
-            className={`admin-nav-item ${activeTab === "orders" ? "active" : ""}`}
-            onClick={() => { setActiveTab("orders"); setSearch(""); }}
-          >
-            <span>📦</span> Manage Orders
-          </button>
-          <button
-            className="admin-nav-item"
-            onClick={() => navigate("/")}
-          >
-            <span>🏠</span> Go to Site
+            <span>📊</span> Reports / Analytics
           </button>
         </nav>
 
@@ -678,6 +678,22 @@ function AdminPanel() {
                       )}
                     </tbody>
                   </table>
+                </div>
+              </div>
+            )}
+
+            {/* --- ANALYTICS TAB --- */}
+            {activeTab === "analytics" && (
+              <div className="admin-analytics-tab">
+                <div className="admin-card">
+                  <div className="admin-card-header">
+                    <h2>Reports & Analytics</h2>
+                  </div>
+                  <div style={{ padding: "2rem", textAlign: "center", color: "var(--admin-muted)" }}>
+                    <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>📊</div>
+                    <h3>Analytics Dashboard</h3>
+                    <p style={{ marginTop: "0.5rem" }}>Detailed sales reports, popular products analysis, and stock overview will be available here soon.</p>
+                  </div>
                 </div>
               </div>
             )}
