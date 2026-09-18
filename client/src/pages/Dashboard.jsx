@@ -128,8 +128,7 @@ function Dashboard() {
         {/* ===== HERO SECTION ===== */}
         <section className="dashboard-hero">
           <div className="hero-content">
-            <div className="hero-badge-wrap">
-            </div>
+
             <h1 className="hero-title">
               {t("heroTitlePrefix")} <br /> <span>{t("heroTitleSuffix")}</span>
             </h1>
