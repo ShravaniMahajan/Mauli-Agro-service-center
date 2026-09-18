@@ -172,7 +172,7 @@ function Navbar() {
                           className="popup-menu-item"
                           onClick={() => {
                             setShowProfileMenu(false);
-                            navigate("/user-panel");
+                            navigate("/user-panel", { state: { tab: "profile" } });
                           }}
                         >
                           <span className="menu-icon">👤</span> My Profile & Details
@@ -181,7 +181,7 @@ function Navbar() {
                           className="popup-menu-item"
                           onClick={() => {
                             setShowProfileMenu(false);
-                            navigate("/user-panel");
+                            navigate("/user-panel", { state: { tab: "orders" } });
                           }}
                         >
                           <span className="menu-icon">📦</span> My Order History

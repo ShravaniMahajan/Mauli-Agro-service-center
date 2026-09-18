@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import API from "../services/api";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
@@ -7,11 +7,12 @@ import "./UserPanel.css";
 
 function UserPanel() {
   const navigate = useNavigate();
+  const location = useLocation();
   const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
   const [profile, setProfile] = useState(null);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("profile");
+  const [activeTab, setActiveTab] = useState(location.state?.tab || "profile");
 
   const token = localStorage.getItem("token");
 
